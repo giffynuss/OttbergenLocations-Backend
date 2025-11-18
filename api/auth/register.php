@@ -4,7 +4,7 @@ header("Access-Control-Allow-Origin: *");
 header("Access-Control-Allow-Headers: Content-Type");
 header("Access-Control-Allow-Methods: POST");
 
-require_once __DIR__ . '/database.php';
+require_once __DIR__ . '/../../config/database.php';
 
 $input = json_decode(file_get_contents("php://input"), true);
 
@@ -19,9 +19,9 @@ $conn = $db->getConnection();
 try {
     $stmt = $conn->prepare("
         INSERT INTO users
-        (first_name, last_name, email, phone_number, street_name, street_number, zip_code, city, password_hash, salt, is_provider)
+        (first_name, last_name, email, phone, street, house_number, zip_code, city, password_hash, salt, is_provider)
         VALUES
-        (:first_name, :last_name, :email, :phone_number, :street_name, :street_number, :zip_code, :city, :password_hash, :salt, 0)
+        (:first_name, :last_name, :email, :phone, :street, :house_number, :zip_code, :city, :password_hash, :salt, 0)
     ");
 
     $salt = bin2hex(random_bytes(16));
@@ -31,9 +31,9 @@ try {
         ":first_name" => $input["firstName"],
         ":last_name" => $input["lastName"],
         ":email" => $input["email"],
-        ":phone_number" => $input["phoneNumber"],
-        ":street_name" => $input["streetName"],
-        ":street_number" => $input["streetNumber"],
+        ":phone" => $input["phone"],
+        ":street" => $input["street"],
+        ":house_number" => $input["houseNumber"],
         ":zip_code" => $input["zipCode"],
         ":city" => $input["city"],
         ":password_hash" => $password_hash,
