@@ -2,9 +2,9 @@
 
 class Database {
     private $host = "localhost";
-    private $db_name = "ottbergen_booking";   // <-- Ändern!
-    private $username = "root";             // XAMPP Default
-    private $password = "";                 // XAMPP hat kein Passwort
+    private $db_name = "ottbergen_booking";
+    private $username = "root";
+    private $password = "";
     public $conn;
 
     public function getConnection() {
