@@ -24,6 +24,7 @@ try{
             user_id,
             first_name,
             last_name,
+            gender,
             email,
             phone,
             street,

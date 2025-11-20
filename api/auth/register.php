@@ -19,9 +19,9 @@ $conn = $db->getConnection();
 try {
     $stmt = $conn->prepare("
         INSERT INTO users
-        (first_name, last_name, email, phone, street, house_number, zip_code, city, password_hash, salt, is_provider)
+        (first_name, last_name, gender, email, phone, street, house_number, zip_code, city, password_hash, salt, is_provider)
         VALUES
-        (:first_name, :last_name, :email, :phone, :street, :house_number, :zip_code, :city, :password_hash, :salt, 0)
+        (:first_name, :last_name, :gender, :email, :phone, :street, :house_number, :zip_code, :city, :password_hash, :salt, 0)
     ");
 
     $salt = bin2hex(random_bytes(16));
@@ -30,6 +30,7 @@ try {
     $stmt->execute([
         ":first_name" => $input["firstName"],
         ":last_name" => $input["lastName"],
+        ":gender" => $input["gender"],
         ":email" => $input["email"],
         ":phone" => $input["phone"],
         ":street" => $input["street"],
