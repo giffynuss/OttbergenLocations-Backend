@@ -1,0 +1,19 @@
+RewriteEngine On
+RewriteBase /OttbergenLocations-Backend/api/bookings/
+
+# PATCH /api/bookings/:id/cancel -> cancel.php?id=:id
+RewriteRule ^([0-9]+)/cancel$ cancel.php?id=$1 [L,QSA]
+
+# PATCH /api/bookings/:id/confirm -> confirm.php?id=:id
+RewriteRule ^([0-9]+)/confirm$ confirm.php?id=$1 [L,QSA]
+
+# GET /api/bookings/:id -> detail.php?id=:id
+RewriteRule ^([0-9]+)$ detail.php?id=$1 [L,QSA]
+
+# POST /api/bookings -> create.php
+RewriteCond %{REQUEST_METHOD} POST
+RewriteRule ^$ create.php [L,QSA]
+
+# GET /api/bookings -> index.php
+RewriteCond %{REQUEST_METHOD} GET
+RewriteRule ^$ index.php [L,QSA]
