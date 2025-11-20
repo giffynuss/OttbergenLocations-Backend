@@ -134,6 +134,12 @@ PATCH http://localhost/OttbergenLocations-Backend/api/bookings/1/cancel
 | POST | `/login.php` | Login |
 | GET | `/me.php` | Aktueller User |
 
+### User (Benutzer)
+
+| Methode | Endpoint | Beschreibung |
+|---------|----------|--------------|
+| POST | `/api/user/become-provider.php` | Als Provider registrieren (Auth erforderlich) |
+
 ## Testing
 
 ### 1. API-Test mit Browser oder Postman

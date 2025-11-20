@@ -51,6 +51,7 @@ OttbergenLocations-Backend/
 ├── api/
 │   ├── places/          # Orte-Endpoints
 │   ├── bookings/        # Buchungs-Endpoints
+│   ├── user/            # User-Endpoints (Provider-Registrierung)
 │   └── providers/       # Provider-Endpoints
 ├── config/
 │   └── database.php     # DB-Konfiguration
@@ -76,19 +77,29 @@ OttbergenLocations-Backend/
 - `POST /register.php` - Registrierung
 
 ### Geschützt (Login erforderlich)
+- `POST /api/user/become-provider.php` - Als Provider registrieren
 - `POST /api/bookings` - Buchung erstellen
 - `GET /api/bookings` - Eigene Buchungen
 - `GET /api/bookings/{id}` - Buchungsdetails
 - `PATCH /api/bookings/{id}/cancel` - Buchung stornieren
 - `PATCH /api/bookings/{id}/confirm` - Buchung bestätigen (nur Provider)
 
+### Provider-Verwaltung (nur Provider)
+- `GET /api/places/my-places.php` - Eigene Orte abrufen
+- `POST /api/places/create.php` - Neuen Ort erstellen
+- `PATCH /api/places/update.php?id={id}` - Ort aktualisieren
+- `DELETE /api/places/delete.php?id={id}` - Ort löschen
+- `PATCH /api/places/toggle-active.php?id={id}` - Ort aktivieren/deaktivieren
+
 ## Features
 
 ✅ Session-basierte Authentifizierung
+✅ Provider-Management (CRUD für Orte)
 ✅ SQL Injection Schutz (Prepared Statements)
 ✅ Automatische Preisberechnung
 ✅ Verfügbarkeitsprüfung
 ✅ Status-Management für Buchungen
+✅ Zugriffskontrolle (nur eigene Daten bearbeiten)
 ✅ CORS-Support für Frontend
 ✅ Saubere URL-Struktur via .htaccess
 ✅ Umfassende Validierung

@@ -1,1 +1,34 @@
+# Composer
+/vendor/
+/composer.lock
+
+# Environment
+.env
+.env.*
+!.env.example
+
+# Logs
+*.log
+logs/
+storage/logs/
+
+# Cache
+cache/
+tmp/
+*.cache
+
+# IDE / Editor
+.vscode/
+.idea/
 .claude
+*.swp
+
+# OS Files
+.DS_Store
+Thumbs.db
+
+# PHPUnit
+.phpunit.result.cache
+
+# Other
+node_modules/
