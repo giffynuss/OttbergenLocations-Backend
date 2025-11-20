@@ -6,7 +6,7 @@ header("Access-Control-Allow-Credentials: true");
 header("Access-Control-Allow-Methods: GET");
 
 session_start();
-require_once __DIR__ . "/../config/database.php";
+require_once __DIR__ . "/../../config/database.php";
 
 // Prüfen, ob der Nutzer eingeloggt ist
 if (!isset($_SESSION["user_id"])) {
