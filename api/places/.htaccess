@@ -1,0 +1,16 @@
+RewriteEngine On
+RewriteBase /OttbergenLocations-Backend/api/places/
+
+# GET /api/places/:id/availability -> availability.php?id=:id
+RewriteRule ^([0-9]+)/availability$ availability.php?id=$1 [L,QSA]
+
+# GET /api/places/:id/calendar -> calendar.php?id=:id
+RewriteRule ^([0-9]+)/calendar$ calendar.php?id=$1 [L,QSA]
+
+# GET /api/places/:id -> detail.php?id=:id
+RewriteRule ^([0-9]+)$ detail.php?id=$1 [L,QSA]
+
+# GET /api/places -> index.php
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^$ index.php [L,QSA]
