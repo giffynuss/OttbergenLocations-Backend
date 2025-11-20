@@ -1,8 +1,0 @@
-RewriteEngine On
-RewriteBase /OttbergenLocations-Backend/api/providers/
-
-# GET /api/providers/:id/places -> places.php?id=:id
-RewriteRule ^([0-9]+)/places$ places.php?id=$1 [L,QSA]
-
-# GET /api/providers/:id -> detail.php?id=:id
-RewriteRule ^([0-9]+)$ detail.php?id=$1 [L,QSA]

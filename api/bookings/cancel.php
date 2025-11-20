@@ -55,7 +55,7 @@ try {
 
     // Buchung laden
     $stmt = $conn->prepare("
-        SELECT b.*, p.provider_id
+        SELECT b.*, p.user_id as place_user_id
         FROM bookings b
         JOIN places p ON b.place_id = p.place_id
         WHERE b.booking_id = :booking_id
@@ -76,7 +76,7 @@ try {
     }
 
     // Autorisierung: Nur der User selbst oder der Provider kann stornieren
-    if ($booking['user_id'] != $userId && $booking['provider_id'] != $userId) {
+    if ($booking['user_id'] != $userId && $booking['place_user_id'] != $userId) {
         http_response_code(403);
         echo json_encode([
             'success' => false,
@@ -102,20 +102,12 @@ try {
         exit;
     }
 
-    // Stornierungsfrist prüfen (Optional, aber empfohlen)
-    $cancellationCheck = canCancelBooking($conn, $booking['check_in']);
-    if (!$cancellationCheck['allowed']) {
-        // Warnung, aber Stornierung trotzdem erlauben
-        $warning = $cancellationCheck['message'];
-    }
-
     // Buchung stornieren
     $updateStmt = $conn->prepare("
         UPDATE bookings
         SET status = 'cancelled',
             cancelled_at = NOW(),
-            cancellation_reason = :reason,
-            updated_at = NOW()
+            cancellation_reason = :reason
         WHERE booking_id = :booking_id
     ");
     $updateStmt->execute([
@@ -129,8 +121,7 @@ try {
             booking_id as id,
             status,
             cancelled_at as cancelledAt,
-            cancellation_reason as cancellationReason,
-            updated_at as updatedAt
+            cancellation_reason as cancellationReason
         FROM bookings
         WHERE booking_id = :booking_id
     ");
@@ -139,17 +130,11 @@ try {
 
     $result['id'] = (int)$result['id'];
 
-    $response = [
+    echo json_encode([
         'success' => true,
         'data' => $result,
         'message' => 'Buchung erfolgreich storniert.'
-    ];
-
-    if (isset($warning)) {
-        $response['warning'] = $warning;
-    }
-
-    echo json_encode($response, JSON_UNESCAPED_UNICODE);
+    ], JSON_UNESCAPED_UNICODE);
 
 } catch (Exception $e) {
     http_response_code(500);

@@ -121,14 +121,14 @@ try {
     }
 
     // Preisberechnung
-    $pricing = calculateBookingPrice($conn, $place['price_per_day'], $checkIn, $checkOut);
+    $pricing = calculateBookingPrice($place['price_per_day'], $checkIn, $checkOut);
 
     // Buchung erstellen
     $stmt = $conn->prepare("
         INSERT INTO bookings
-        (place_id, user_id, check_in, check_out, guests, subtotal, service_fee, tax, total_price, status)
+        (place_id, user_id, check_in, check_out, guests, total_price, status)
         VALUES
-        (:place_id, :user_id, :check_in, :check_out, :guests, :subtotal, :service_fee, :tax, :total_price, 'pending')
+        (:place_id, :user_id, :check_in, :check_out, :guests, :total_price, 'pending')
     ");
 
     $stmt->execute([
@@ -137,9 +137,6 @@ try {
         'check_in' => $checkIn,
         'check_out' => $checkOut,
         'guests' => $guests,
-        'subtotal' => $pricing['subtotal'],
-        'service_fee' => $pricing['serviceFee'],
-        'tax' => $pricing['tax'],
         'total_price' => $pricing['totalPrice']
     ]);
 
@@ -156,12 +153,8 @@ try {
             b.check_in as checkIn,
             b.check_out as checkOut,
             b.guests,
-            b.subtotal,
-            b.service_fee as serviceFee,
-            b.tax,
             b.total_price as totalPrice,
-            b.status,
-            b.created_at as createdAt
+            b.status
         FROM bookings b
         JOIN places p ON b.place_id = p.place_id
         WHERE b.booking_id = :booking_id
@@ -174,9 +167,6 @@ try {
     $booking['placeId'] = (int)$booking['placeId'];
     $booking['userId'] = (int)$booking['userId'];
     $booking['guests'] = (int)$booking['guests'];
-    $booking['subtotal'] = (float)$booking['subtotal'];
-    $booking['serviceFee'] = (float)$booking['serviceFee'];
-    $booking['tax'] = (float)$booking['tax'];
     $booking['totalPrice'] = (float)$booking['totalPrice'];
 
     http_response_code(201);

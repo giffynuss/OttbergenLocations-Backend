@@ -50,13 +50,8 @@ try {
             b.check_in as checkIn,
             b.check_out as checkOut,
             b.guests,
-            b.subtotal,
-            b.service_fee as serviceFee,
-            b.tax,
             b.total_price as totalPrice,
             b.status,
-            b.created_at as createdAt,
-            b.updated_at as updatedAt,
             b.cancelled_at as cancelledAt,
             b.cancellation_reason as cancellationReason,
             p.name as placeName,
@@ -69,7 +64,7 @@ try {
             u.phone as providerPhone
         FROM bookings b
         JOIN places p ON b.place_id = p.place_id
-        JOIN users u ON p.provider_id = u.user_id
+        JOIN users u ON p.user_id = u.user_id
         WHERE b.booking_id = :booking_id
     ");
     $stmt->execute(['booking_id' => $bookingId]);
@@ -143,9 +138,6 @@ try {
     $booking['id'] = (int)$booking['id'];
     $booking['placeId'] = (int)$booking['placeId'];
     $booking['guests'] = (int)$booking['guests'];
-    $booking['subtotal'] = (float)$booking['subtotal'];
-    $booking['serviceFee'] = (float)$booking['serviceFee'];
-    $booking['tax'] = (float)$booking['tax'];
     $booking['totalPrice'] = (float)$booking['totalPrice'];
 
     echo json_encode([

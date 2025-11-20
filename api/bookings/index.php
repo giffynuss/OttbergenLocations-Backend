@@ -45,8 +45,7 @@ try {
             b.check_out as checkOut,
             b.guests,
             b.total_price as totalPrice,
-            b.status,
-            b.created_at as createdAt
+            b.status
         FROM bookings b
         JOIN places p ON b.place_id = p.place_id
         WHERE b.user_id = :user_id
@@ -60,7 +59,7 @@ try {
         $params['status'] = $status;
     }
 
-    $sql .= " ORDER BY b.created_at DESC LIMIT :limit OFFSET :offset";
+    $sql .= " ORDER BY b.booking_id DESC LIMIT :limit OFFSET :offset";
 
     $stmt = $conn->prepare($sql);
     foreach ($params as $key => $value) {

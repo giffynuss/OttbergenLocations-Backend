@@ -53,11 +53,11 @@ function isProvider() {
  * @return bool
  */
 function canAccessPlace($conn, $placeId, $userId) {
-    $stmt = $conn->prepare("SELECT provider_id FROM places WHERE place_id = :place_id");
+    $stmt = $conn->prepare("SELECT user_id FROM places WHERE place_id = :place_id");
     $stmt->execute(['place_id' => $placeId]);
     $place = $stmt->fetch(PDO::FETCH_ASSOC);
 
-    return $place && $place['provider_id'] == $userId;
+    return $place && $place['user_id'] == $userId;
 }
 
 /**
@@ -69,7 +69,7 @@ function canAccessPlace($conn, $placeId, $userId) {
  */
 function canAccessBooking($conn, $bookingId, $userId) {
     $stmt = $conn->prepare("
-        SELECT b.user_id, p.provider_id
+        SELECT b.user_id, p.user_id as place_user_id
         FROM bookings b
         JOIN places p ON b.place_id = p.place_id
         WHERE b.booking_id = :booking_id
@@ -79,6 +79,6 @@ function canAccessBooking($conn, $bookingId, $userId) {
 
     if (!$result) return false;
 
-    // User ist entweder der Buchende oder der Anbieter
-    return $result['user_id'] == $userId || $result['provider_id'] == $userId;
+    // User ist entweder der Buchende oder der Anbieter des Ortes
+    return $result['user_id'] == $userId || $result['place_user_id'] == $userId;
 }

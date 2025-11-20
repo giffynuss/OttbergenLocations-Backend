@@ -48,15 +48,10 @@ try {
             p.address,
             p.postal_code as postalCode,
             p.active,
-            p.created_at as createdAt,
-            p.updated_at as updatedAt,
             u.user_id as providerId,
-            CONCAT(u.first_name, ' ', u.last_name) as providerName,
-            pr.member_since as providerMemberSince,
-            pr.verified as providerVerified
+            CONCAT(u.first_name, ' ', u.last_name) as providerName
         FROM places p
-        LEFT JOIN users u ON p.provider_id = u.user_id
-        LEFT JOIN providers pr ON u.user_id = pr.user_id
+        LEFT JOIN users u ON p.user_id = u.user_id
         WHERE 1=1
     ";
 
@@ -95,10 +90,9 @@ try {
     foreach ($places as &$place) {
         // Bilder laden
         $imgStmt = $conn->prepare("
-            SELECT url, thumbnail_url as thumbnailUrl
+            SELECT url
             FROM place_images
             WHERE place_id = :place_id
-            ORDER BY sort_order ASC
         ");
         $imgStmt->execute(['place_id' => $place['id']]);
         $images = $imgStmt->fetchAll(PDO::FETCH_ASSOC);
@@ -107,13 +101,11 @@ try {
         // Provider-Objekt formatieren
         $place['provider'] = [
             'id' => $place['providerId'],
-            'name' => $place['providerName'],
-            'memberSince' => $place['providerMemberSince'],
-            'verified' => (bool)$place['providerVerified']
+            'name' => $place['providerName']
         ];
 
         // Unbenötigte Felder entfernen
-        unset($place['providerId'], $place['providerName'], $place['providerMemberSince'], $place['providerVerified']);
+        unset($place['providerId'], $place['providerName']);
 
         // Boolean-Werte konvertieren
         $place['active'] = (bool)$place['active'];

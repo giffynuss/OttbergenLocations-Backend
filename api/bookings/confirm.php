@@ -50,7 +50,7 @@ try {
 
     // Buchung laden
     $stmt = $conn->prepare("
-        SELECT b.*, p.provider_id
+        SELECT b.*, p.user_id as place_user_id
         FROM bookings b
         JOIN places p ON b.place_id = p.place_id
         WHERE b.booking_id = :booking_id
@@ -71,7 +71,7 @@ try {
     }
 
     // Autorisierung: Nur der Provider des Ortes darf bestätigen
-    if ($booking['provider_id'] != $userId) {
+    if ($booking['place_user_id'] != $userId) {
         http_response_code(403);
         echo json_encode([
             'success' => false,
@@ -107,8 +107,7 @@ try {
     // Buchung bestätigen
     $updateStmt = $conn->prepare("
         UPDATE bookings
-        SET status = :status,
-            updated_at = NOW()
+        SET status = :status
         WHERE booking_id = :booking_id
     ");
     $updateStmt->execute([
@@ -120,8 +119,7 @@ try {
     $resultStmt = $conn->prepare("
         SELECT
             booking_id as id,
-            status,
-            updated_at as updatedAt
+            status
         FROM bookings
         WHERE booking_id = :booking_id
     ");

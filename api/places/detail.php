@@ -53,18 +53,12 @@ try {
             p.address,
             p.postal_code as postalCode,
             p.active,
-            p.created_at as createdAt,
-            p.updated_at as updatedAt,
             u.user_id as providerId,
             u.email as providerEmail,
             CONCAT(u.first_name, ' ', u.last_name) as providerName,
-            u.phone as providerPhone,
-            pr.member_since as providerMemberSince,
-            pr.avatar as providerAvatar,
-            pr.verified as providerVerified
+            u.phone as providerPhone
         FROM places p
-        LEFT JOIN users u ON p.provider_id = u.user_id
-        LEFT JOIN providers pr ON u.user_id = pr.user_id
+        LEFT JOIN users u ON p.user_id = u.user_id
         WHERE p.place_id = :place_id
     ");
     $stmt->execute(['place_id' => $placeId]);
@@ -84,10 +78,9 @@ try {
 
     // Bilder laden
     $imgStmt = $conn->prepare("
-        SELECT url, thumbnail_url as thumbnailUrl
+        SELECT url
         FROM place_images
         WHERE place_id = :place_id
-        ORDER BY sort_order ASC
     ");
     $imgStmt->execute(['place_id' => $placeId]);
     $images = $imgStmt->fetchAll(PDO::FETCH_ASSOC);
@@ -119,10 +112,7 @@ try {
         'id' => (int)$place['providerId'],
         'name' => $place['providerName'],
         'email' => $place['providerEmail'],
-        'phone' => $place['providerPhone'],
-        'memberSince' => $place['providerMemberSince'],
-        'avatar' => $place['providerAvatar'],
-        'verified' => (bool)$place['providerVerified']
+        'phone' => $place['providerPhone']
     ];
 
     // Unbenötigte Felder entfernen
@@ -130,10 +120,7 @@ try {
         $place['providerId'],
         $place['providerName'],
         $place['providerEmail'],
-        $place['providerPhone'],
-        $place['providerMemberSince'],
-        $place['providerAvatar'],
-        $place['providerVerified']
+        $place['providerPhone']
     );
 
     // Datentypen konvertieren
