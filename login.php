@@ -38,6 +38,7 @@ try {
     // Erfolgsantwort
     echo json_encode(["success" => true, "message" => "Login erfolgreich",
     ]);
+    exit;
 
 } catch (Exception $e) {
     echo json_encode([
