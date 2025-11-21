@@ -20,7 +20,7 @@ tmp/
 # IDE / Editor
 .vscode/
 .idea/
-.claude
+.claude/
 *.swp
 
 # OS Files

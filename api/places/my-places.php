@@ -3,9 +3,15 @@
 
 header("Content-Type: application/json; charset=utf-8");
 header("Access-Control-Allow-Origin: http://localhost:5173");
-header("Access-Control-Allow-Methods: GET");
+header("Access-Control-Allow-Methods: GET, OPTIONS");
 header("Access-Control-Allow-Headers: Content-Type");
 header("Access-Control-Allow-Credentials: true");
+
+// Handle preflight OPTIONS request
+if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+    http_response_code(200);
+    exit;
+}
 
 require_once __DIR__ . '/../../config/database.php';
 require_once __DIR__ . '/../../helpers/auth.php';
@@ -43,12 +49,10 @@ try {
             p.longitude,
             p.address,
             p.postal_code as postalCode,
-            p.active,
-            p.created_at as createdAt,
-            p.updated_at as updatedAt
+            p.active
         FROM places p
         WHERE p.user_id = :user_id
-        ORDER BY p.created_at DESC
+        ORDER BY p.place_id DESC
     ";
 
     $stmt = $conn->prepare($sql);

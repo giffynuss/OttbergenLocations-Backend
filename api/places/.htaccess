@@ -1,6 +1,15 @@
 RewriteEngine On
 RewriteBase /OttbergenLocations-Backend/api/places/
 
+# Provider Management Endpoints
+RewriteRule ^my-places$ my-places.php [L,QSA]
+RewriteRule ^manage-places$ my-places.php [L,QSA]
+RewriteRule ^orte-einstellen$ create.php [L,QSA]
+RewriteRule ^create$ create.php [L,QSA]
+RewriteRule ^update$ update.php [L,QSA]
+RewriteRule ^delete$ delete.php [L,QSA]
+RewriteRule ^toggle-active$ toggle-active.php [L,QSA]
+
 # GET /api/places/:id/availability -> availability.php?id=:id
 RewriteRule ^([0-9]+)/availability$ availability.php?id=$1 [L,QSA]
 

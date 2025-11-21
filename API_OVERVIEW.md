@@ -125,9 +125,7 @@ GET /api/places?search=kulturraum&minCapacity=50&maxPrice=300
         "name": "Max Mustermann",
         "memberSince": "2024-01-15",
         "verified": true
-      },
-      "createdAt": "2024-01-20T10:00:00Z",
-      "updatedAt": "2024-12-01T14:30:00Z"
+      }
     }
   ],
   "total": 1
@@ -188,9 +186,7 @@ GET /api/places/1
       "memberSince": "2024-01-15",
       "avatar": "https://example.com/avatar.jpg",
       "verified": true
-    },
-    "createdAt": "2024-01-20T10:00:00Z",
-    "updatedAt": "2024-12-01T14:30:00Z"
+    }
   }
 }
 ```
@@ -298,9 +294,7 @@ Gibt alle Orte des eingeloggten Providers zurück.
           "icon": "wifi",
           "available": true
         }
-      ],
-      "createdAt": "2024-01-20T10:00:00Z",
-      "updatedAt": "2024-12-01T14:30:00Z"
+      ]
     }
   ],
   "total": 1
@@ -491,8 +485,7 @@ Content-Type: application/json
     "serviceFee": 62.50,
     "tax": 249.38,
     "totalPrice": 1561.88,
-    "status": "pending",
-    "createdAt": "2025-11-19T10:00:00Z"
+    "status": "pending"
   },
   "message": "Buchung erfolgreich erstellt. Bitte warten Sie auf die Bestätigung des Anbieters."
 }
@@ -532,8 +525,7 @@ GET /api/bookings?status=confirmed&page=1&limit=20
       "checkOut": "2025-12-20",
       "guests": 50,
       "totalPrice": 1561.88,
-      "status": "confirmed",
-      "createdAt": "2025-11-19T10:00:00Z"
+      "status": "confirmed"
     }
   ],
   "pagination": {
@@ -579,9 +571,7 @@ GET /api/bookings/{id}
     "serviceFee": 62.50,
     "tax": 249.38,
     "totalPrice": 1561.88,
-    "status": "confirmed",
-    "createdAt": "2025-11-19T10:00:00Z",
-    "updatedAt": "2025-11-19T11:30:00Z"
+    "status": "confirmed"
   }
 }
 ```
@@ -606,8 +596,7 @@ Content-Type: application/json
     "id": 123,
     "status": "cancelled",
     "cancelledAt": "2025-11-20T09:00:00Z",
-    "cancellationReason": "Terminänderung",
-    "updatedAt": "2025-11-20T09:00:00Z"
+    "cancellationReason": "Terminänderung"
   },
   "message": "Buchung erfolgreich storniert"
 }
@@ -631,8 +620,7 @@ PATCH /api/bookings/{id}/confirm
   "success": true,
   "data": {
     "id": 123,
-    "status": "confirmed",
-    "updatedAt": "2025-11-20T10:00:00Z"
+    "status": "confirmed"
   },
   "message": "Buchung erfolgreich bestätigt"
 }

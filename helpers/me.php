@@ -29,7 +29,8 @@ try{
             street,
             house_number,
             zip_code,
-            city
+            city,
+            is_provider
         FROM users
         WHERE user_id = :user_id
         LIMIT 1
@@ -42,6 +43,18 @@ try{
         echo json_encode(["success"=> false,"message"=> "Benutzer nicht gefunden"]);
         exit;
     }
+
+    // is_provider zu Boolean konvertieren (DB gibt 0/1 zurück)
+    $user['is_provider'] = (bool)$user['is_provider'];
+
+    // Debug-Logging (kann später entfernt werden)
+    error_log("=== ME.PHP DEBUG ===");
+    error_log("User ID: " . $user['user_id']);
+    error_log("is_provider value: " . ($user['is_provider'] ? 'true' : 'false'));
+    error_log("is_provider type: " . gettype($user['is_provider']));
+    error_log("Session ID: " . session_id());
+    error_log("Session is_provider: " . ($_SESSION['is_provider'] ?? 'NOT SET'));
+    error_log("====================");
 
     echo json_encode(["success" => true,"user" => $user]);
 

@@ -171,9 +171,6 @@ try {
         $params['active'] = (bool)$input['active'];
     }
 
-    // updated_at immer setzen
-    $updateFields[] = "updated_at = NOW()";
-
     if (empty($updateFields)) {
         http_response_code(400);
         echo json_encode([
@@ -239,9 +236,7 @@ try {
             longitude,
             address,
             postal_code as postalCode,
-            active,
-            created_at as createdAt,
-            updated_at as updatedAt
+            active
         FROM places
         WHERE place_id = :place_id
     ");

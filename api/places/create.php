@@ -118,9 +118,9 @@ try {
     // Ort erstellen
     $stmt = $conn->prepare("
         INSERT INTO places
-        (name, description, location, capacity, price_per_day, latitude, longitude, address, postal_code, user_id, active, created_at, updated_at)
+        (name, description, location, capacity, price_per_day, latitude, longitude, address, postal_code, user_id, active)
         VALUES
-        (:name, :description, :location, :capacity, :price_per_day, :latitude, :longitude, :address, :postal_code, :user_id, :active, NOW(), NOW())
+        (:name, :description, :location, :capacity, :price_per_day, :latitude, :longitude, :address, :postal_code, :user_id, :active)
     ");
 
     $active = isset($input['active']) ? (bool)$input['active'] : true;
@@ -181,9 +181,7 @@ try {
             longitude,
             address,
             postal_code as postalCode,
-            active,
-            created_at as createdAt,
-            updated_at as updatedAt
+            active
         FROM places
         WHERE place_id = :place_id
     ");
