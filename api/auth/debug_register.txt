@@ -1,0 +1,13 @@
+Array
+(
+    [firstName] => Oliver 
+    [lastName] => Heidt
+    [gender] => herr
+    [email] => oliver@gmail.com
+    [phone] => 5643278657
+    [street] => Oliverstraße
+    [houseNumber] => 34
+    [zipCode] => 32453
+    [city] => Oliverstadt
+    [password] => vision
+)
