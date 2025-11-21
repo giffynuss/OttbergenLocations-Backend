@@ -53,6 +53,33 @@ Content-Type: application/json
 GET /me.php
 ```
 
+### Provider werden
+```http
+POST /api/user/become-provider.php
+```
+
+**Beschreibung:**
+Setzt den `is_provider`-Status des eingeloggten Users auf `true`. Erfordert Authentifizierung.
+
+**Response:**
+```json
+{
+  "success": true,
+  "message": "Sie wurden erfolgreich als Provider registriert"
+}
+```
+
+**Fehler:**
+```json
+{
+  "success": false,
+  "error": {
+    "code": "UNAUTHORIZED",
+    "message": "Nicht authentifiziert. Bitte melden Sie sich an."
+  }
+}
+```
+
 ---
 
 ## Places (Orte)
@@ -98,9 +125,7 @@ GET /api/places?search=kulturraum&minCapacity=50&maxPrice=300
         "name": "Max Mustermann",
         "memberSince": "2024-01-15",
         "verified": true
-      },
-      "createdAt": "2024-01-20T10:00:00Z",
-      "updatedAt": "2024-12-01T14:30:00Z"
+      }
     }
   ],
   "total": 1
@@ -161,9 +186,7 @@ GET /api/places/1
       "memberSince": "2024-01-15",
       "avatar": "https://example.com/avatar.jpg",
       "verified": true
-    },
-    "createdAt": "2024-01-20T10:00:00Z",
-    "updatedAt": "2024-12-01T14:30:00Z"
+    }
   }
 }
 ```
@@ -234,6 +257,200 @@ GET /api/places/1/calendar
 
 ---
 
+## Places Management (Ortsverwaltung für Provider)
+
+🔒 **Alle Management-Endpoints erfordern Authentifizierung als Provider**
+
+### 1. Eigene Orte abrufen
+```http
+GET /api/places/my-places.php
+```
+
+**Beschreibung:**
+Gibt alle Orte des eingeloggten Providers zurück.
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "id": 1,
+      "name": "Kulturraum Ottbergen",
+      "description": "Ein wunderschöner Veranstaltungsraum...",
+      "location": "Ottbergen",
+      "capacity": 100,
+      "pricePerDay": 250,
+      "latitude": 51.7234,
+      "longitude": 9.3456,
+      "address": "Hauptstraße 45",
+      "postalCode": "37691",
+      "active": true,
+      "images": ["https://example.com/image1.jpg"],
+      "features": [
+        {
+          "id": 1,
+          "name": "WLAN verfügbar",
+          "icon": "wifi",
+          "available": true
+        }
+      ]
+    }
+  ],
+  "total": 1
+}
+```
+
+---
+
+### 2. Neuen Ort erstellen
+```http
+POST /api/places/create.php
+Content-Type: application/json
+
+{
+  "name": "Mein neuer Ort",
+  "description": "Beschreibung des Ortes",
+  "location": "Stadtname",
+  "capacity": 50,
+  "pricePerDay": 150.00,
+  "latitude": 51.1234,
+  "longitude": 9.5678,
+  "address": "Musterstraße 1",
+  "postalCode": "12345",
+  "active": true,
+  "images": ["https://example.com/image1.jpg"],
+  "features": [
+    {
+      "name": "WLAN verfügbar",
+      "icon": "wifi",
+      "available": true
+    }
+  ]
+}
+```
+
+**Pflichtfelder:**
+- `name` - Name des Ortes
+- `description` - Beschreibung
+- `location` - Standort
+- `capacity` - Kapazität (min. 1)
+- `pricePerDay` - Preis pro Tag (positiv)
+
+**Optionale Felder:**
+- `latitude`, `longitude` - GPS-Koordinaten
+- `address`, `postalCode` - Adresse
+- `active` - Status (default: true)
+- `images` - Array von Bild-URLs
+- `features` - Array von Features
+
+**Response (201 Created):**
+```json
+{
+  "success": true,
+  "data": {
+    "id": 5,
+    "name": "Mein neuer Ort",
+    ...
+  },
+  "message": "Ort erfolgreich erstellt"
+}
+```
+
+**Fehler:**
+- `NOT_A_PROVIDER` - User ist kein Provider
+- `MISSING_FIELDS` - Pflichtfelder fehlen
+- `INVALID_CAPACITY` - Ungültige Kapazität
+- `INVALID_PRICE` - Ungültiger Preis
+
+---
+
+### 3. Ort aktualisieren
+```http
+PATCH /api/places/update.php?id={id}
+Content-Type: application/json
+
+{
+  "name": "Aktualisierter Name",
+  "pricePerDay": 200.00,
+  "active": false
+}
+```
+
+**Beschreibung:**
+Aktualisiert einen bestehenden Ort. Nur eigene Orte können bearbeitet werden.
+Alle Felder sind optional - es werden nur die angegebenen Felder aktualisiert.
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "id": 1,
+    "name": "Aktualisierter Name",
+    ...
+  },
+  "message": "Ort erfolgreich aktualisiert"
+}
+```
+
+**Fehler:**
+- `PLACE_NOT_FOUND` - Ort existiert nicht
+- `FORBIDDEN` - Keine Berechtigung (nicht eigener Ort)
+- `NO_UPDATE_DATA` - Keine Daten zum Aktualisieren
+
+---
+
+### 4. Ort löschen
+```http
+DELETE /api/places/delete.php?id={id}
+```
+
+**Beschreibung:**
+Löscht einen Ort. Nur eigene Orte können gelöscht werden.
+Orte mit aktiven Buchungen können nicht gelöscht werden.
+
+**Response:**
+```json
+{
+  "success": true,
+  "message": "Ort erfolgreich gelöscht"
+}
+```
+
+**Fehler:**
+- `PLACE_NOT_FOUND` - Ort existiert nicht
+- `FORBIDDEN` - Keine Berechtigung (nicht eigener Ort)
+- `HAS_ACTIVE_BOOKINGS` - Ort hat noch aktive Buchungen
+
+---
+
+### 5. Ort aktivieren/deaktivieren
+```http
+PATCH /api/places/toggle-active.php?id={id}
+```
+
+**Beschreibung:**
+Schaltet den aktiven Status eines Ortes um (aktiv ↔ inaktiv).
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "id": 1,
+    "active": false
+  },
+  "message": "Ort wurde deaktiviert"
+}
+```
+
+**Fehler:**
+- `PLACE_NOT_FOUND` - Ort existiert nicht
+- `FORBIDDEN` - Keine Berechtigung (nicht eigener Ort)
+
+---
+
 ## Bookings (Buchungen)
 
 🔒 **Alle Booking-Endpoints erfordern Authentifizierung**
@@ -268,8 +485,7 @@ Content-Type: application/json
     "serviceFee": 62.50,
     "tax": 249.38,
     "totalPrice": 1561.88,
-    "status": "pending",
-    "createdAt": "2025-11-19T10:00:00Z"
+    "status": "pending"
   },
   "message": "Buchung erfolgreich erstellt. Bitte warten Sie auf die Bestätigung des Anbieters."
 }
@@ -309,8 +525,7 @@ GET /api/bookings?status=confirmed&page=1&limit=20
       "checkOut": "2025-12-20",
       "guests": 50,
       "totalPrice": 1561.88,
-      "status": "confirmed",
-      "createdAt": "2025-11-19T10:00:00Z"
+      "status": "confirmed"
     }
   ],
   "pagination": {
@@ -356,9 +571,7 @@ GET /api/bookings/{id}
     "serviceFee": 62.50,
     "tax": 249.38,
     "totalPrice": 1561.88,
-    "status": "confirmed",
-    "createdAt": "2025-11-19T10:00:00Z",
-    "updatedAt": "2025-11-19T11:30:00Z"
+    "status": "confirmed"
   }
 }
 ```
@@ -383,8 +596,7 @@ Content-Type: application/json
     "id": 123,
     "status": "cancelled",
     "cancelledAt": "2025-11-20T09:00:00Z",
-    "cancellationReason": "Terminänderung",
-    "updatedAt": "2025-11-20T09:00:00Z"
+    "cancellationReason": "Terminänderung"
   },
   "message": "Buchung erfolgreich storniert"
 }
@@ -408,8 +620,7 @@ PATCH /api/bookings/{id}/confirm
   "success": true,
   "data": {
     "id": 123,
-    "status": "confirmed",
-    "updatedAt": "2025-11-20T10:00:00Z"
+    "status": "confirmed"
   },
   "message": "Buchung erfolgreich bestätigt"
 }
@@ -497,10 +708,17 @@ Alle Fehler-Responses folgen diesem Format:
 | `BOOKING_NOT_FOUND` | 404 | Buchung existiert nicht |
 | `INVALID_JSON` | 400 | Ungültige JSON-Daten |
 | `MISSING_FIELDS` | 400 | Pflichtfelder fehlen |
+| `MISSING_PLACE_ID` | 400 | Ort-ID fehlt |
 | `INVALID_DATE_RANGE` | 400 | Ungültiger Datumsbereich |
+| `INVALID_CAPACITY` | 400 | Ungültige Kapazität |
+| `INVALID_PRICE` | 400 | Ungültiger Preis |
 | `CAPACITY_EXCEEDED` | 400 | Zu viele Gäste |
+| `NO_UPDATE_DATA` | 400 | Keine Daten zum Aktualisieren |
 | `PLACE_NOT_AVAILABLE` | 409 | Ort ist bereits gebucht |
+| `HAS_ACTIVE_BOOKINGS` | 409 | Ort hat aktive Buchungen |
 | `INVALID_STATUS` | 400 | Ungültiger Status-Übergang |
+| `NOT_A_PROVIDER` | 403 | User ist kein Provider |
+| `METHOD_NOT_ALLOWED` | 405 | HTTP-Methode nicht erlaubt |
 | `SERVER_ERROR` | 500 | Interner Serverfehler |
 
 ---
@@ -557,14 +775,15 @@ Prozentsätze sind in der `settings`-Tabelle konfigurierbar.
 ## Implementierungsstatus
 
 ✅ **Vollständig implementiert:**
-- Alle Places-Endpoints
+- Alle Places-Endpoints (öffentlich)
+- Places Management für Provider (CRUD)
 - Alle Bookings-Endpoints
 - Provider-Endpoints
-- Auth-System (Login, Register)
+- Auth-System (Login, Register, Provider-Registrierung)
 - Validierung & Fehlerbehandlung
 - Preisberechnung
 - Verfügbarkeitsprüfung
-- Autorisierung
+- Autorisierung & Zugriffskontrolle
 
 ⏳ **Noch zu implementieren (Nice-to-have):**
 - Email-Benachrichtigungen
