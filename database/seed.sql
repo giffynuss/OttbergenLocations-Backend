@@ -149,7 +149,7 @@ INSERT INTO place_features (place_id, name, icon, available) VALUES
 (4, 'Bar vorhanden', 'bar', 1);
 
 -- Beispiel-Buchungen
-INSERT INTO bookings (place_id, user_id, check_in, check_out, guests, total_price, status) VALUES
+INSERT INTO bookings (place_id, user_id, check_in, check_out, guests, total_price, payment_method, booking_reference, status) VALUES
 (
     1, -- Kulturraum Ottbergen
     4,
@@ -157,6 +157,8 @@ INSERT INTO bookings (place_id, user_id, check_in, check_out, guests, total_pric
     '2025-12-20',
     80,
     1250.00,  -- 250 * 5 Tage
+    'transfer',
+    'BK20251120-0001',
     'confirmed'
 ),
 (
@@ -166,14 +168,22 @@ INSERT INTO bookings (place_id, user_id, check_in, check_out, guests, total_pric
     '2025-12-30',
     40,
     300.00,   -- 150 * 2 Tage
+    'cash',
+    'BK20251120-0002',
     'upcoming'
 ),
 (
     3, -- Dorfgemeinschaftshaus
-    4,
+    NULL, -- Gast-Buchung
     '2026-01-10',
     '2026-01-12',
     30,
     240.00,   -- 120 * 2 Tage
+    'cash',
+    'BK20251120-0003',
     'pending'
 );
+
+-- Gast-Informationen für Buchung 3 (Gast-Buchung ohne User-Account)
+INSERT INTO booking_guest_info (booking_id, gender, first_name, last_name, email, phone) VALUES
+(3, 'herr', 'Gast', 'User', 'gast@example.com', '+49 555 123456');

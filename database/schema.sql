@@ -1,6 +1,6 @@
 -- OttbergenLocations Database Schema
 -- Erstellt: 2025-11-20
--- Aktualisiert: 2025-11-20 - Vereinfachte Version
+-- Aktualisiert: 2025-11-24 - Checkout-Funktionalität hinzugefügt
 
 -- Datenbank erstellen (falls noch nicht vorhanden)
 CREATE DATABASE IF NOT EXISTS ottbergen_booking CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
@@ -78,7 +78,7 @@ CREATE TABLE IF NOT EXISTS place_features (
 CREATE TABLE IF NOT EXISTS bookings (
     booking_id INT AUTO_INCREMENT PRIMARY KEY,
     place_id INT NOT NULL,
-    user_id INT NOT NULL,
+    user_id INT NULL,  -- NULL erlaubt für Gast-Buchungen
 
     -- Buchungszeitraum
     check_in DATE NOT NULL,
@@ -87,8 +87,10 @@ CREATE TABLE IF NOT EXISTS bookings (
     -- Gäste
     guests INT NOT NULL,
 
-    -- Preis
+    -- Preis & Zahlung
     total_price DECIMAL(10, 2) NOT NULL,
+    payment_method ENUM('cash', 'paypal', 'transfer', 'wero') DEFAULT 'cash',
+    booking_reference VARCHAR(50) UNIQUE,
 
     -- Status
     status ENUM('pending', 'confirmed', 'upcoming', 'completed', 'cancelled') DEFAULT 'pending',
@@ -98,11 +100,37 @@ CREATE TABLE IF NOT EXISTS bookings (
     cancellation_reason TEXT,
 
     FOREIGN KEY (place_id) REFERENCES places(place_id) ON DELETE CASCADE,
-    FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE,
+    FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE SET NULL,
     INDEX idx_place_id (place_id),
     INDEX idx_user_id (user_id),
     INDEX idx_status (status),
     INDEX idx_check_in (check_in),
     INDEX idx_check_out (check_out),
-    INDEX idx_dates (check_in, check_out)
+    INDEX idx_dates (check_in, check_out),
+    INDEX idx_booking_reference (booking_reference)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Booking Guest Info Tabelle (Gast-Informationen für Buchungen)
+CREATE TABLE IF NOT EXISTS booking_guest_info (
+    guest_info_id INT AUTO_INCREMENT PRIMARY KEY,
+    booking_id INT NOT NULL,
+
+    -- Kontaktdaten (Pflichtfelder)
+    gender ENUM('herr', 'frau') NOT NULL,
+    first_name VARCHAR(100) NOT NULL,
+    last_name VARCHAR(100) NOT NULL,
+    email VARCHAR(255) NOT NULL,
+    phone VARCHAR(20) NOT NULL,
+
+    -- Adresse (Optional, nur bei Zahlungsart "transfer")
+    street VARCHAR(255),
+    postal_code VARCHAR(10),
+    city VARCHAR(100),
+
+    -- Zeitstempel
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+    FOREIGN KEY (booking_id) REFERENCES bookings(booking_id) ON DELETE CASCADE,
+    INDEX idx_booking_id (booking_id),
+    INDEX idx_email (email)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
