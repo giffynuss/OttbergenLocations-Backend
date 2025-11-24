@@ -132,6 +132,54 @@ GET /api/places?search=kulturraum&minCapacity=50&maxPrice=300
 }
 ```
 
+### 1b. Liste aller Orte (Frontend-Format)
+```http
+GET /api/places/list.php
+```
+
+**Beschreibung:**
+Speziell für das Frontend optimierter Endpunkt mit vereinfachtem Response-Format.
+
+**Query-Parameter (optional):**
+- `search` - Suchbegriff (Name, Beschreibung, Location)
+- `location` - Filter nach Location/Ort
+- `minCapacity` - Minimale Kapazität
+- `maxPrice` - Maximaler Preis pro Tag
+- `checkIn` - Anreisedatum (YYYY-MM-DD) - nur verfügbare Orte
+- `checkOut` - Abreisedatum (YYYY-MM-DD) - nur verfügbare Orte
+
+**Beispiel:**
+```
+GET /api/places/list.php?search=kulturraum&minCapacity=50
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "places": [
+    {
+      "id": 1,
+      "name": "Kulturraum Ottbergen",
+      "description": "Ein wunderschöner Veranstaltungsraum...",
+      "location": "Ottbergen",
+      "capacity": 100,
+      "pricePerDay": 250,
+      "latitude": 51.7234,
+      "longitude": 9.3456,
+      "address": "Hauptstraße 45",
+      "postalCode": "37691",
+      "active": true,
+      "images": ["https://example.com/image1.jpg"],
+      "provider": {
+        "id": 1,
+        "name": "Max Mustermann"
+      }
+    }
+  ]
+}
+```
+
 ---
 
 ### 2. Ort-Details
@@ -187,6 +235,71 @@ GET /api/places/1
       "avatar": "https://example.com/avatar.jpg",
       "verified": true
     }
+  }
+}
+```
+
+### 2b. Ort-Details (Frontend-Format)
+```http
+GET /api/places/get.php?id={id}
+```
+
+**Beschreibung:**
+Speziell für das Frontend optimierter Endpunkt mit vereinfachtem Response-Format und verfügbaren Zeiträumen.
+
+**Query-Parameter:**
+- `id` (required) - ID des Ortes
+
+**Beispiel:**
+```
+GET /api/places/get.php?id=1
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "place": {
+    "id": 1,
+    "name": "Kulturraum Ottbergen",
+    "description": "Ein wunderschöner Veranstaltungsraum...",
+    "location": "Ottbergen",
+    "capacity": 100,
+    "pricePerDay": 250,
+    "latitude": 51.7234,
+    "longitude": 9.3456,
+    "address": "Hauptstraße 45",
+    "postalCode": "37691",
+    "active": true,
+    "images": ["https://example.com/image1.jpg", "https://example.com/image2.jpg"],
+    "features": [
+      {
+        "id": 1,
+        "name": "WLAN verfügbar",
+        "category": "basic"
+      },
+      {
+        "id": 2,
+        "name": "Parkmöglichkeiten",
+        "category": "parking"
+      }
+    ],
+    "provider": {
+      "id": 1,
+      "name": "Max Mustermann",
+      "email": "max@example.com",
+      "phone": "+49 123 456789"
+    },
+    "availableDates": [
+      {
+        "start": "2025-01-01",
+        "end": "2025-01-15"
+      },
+      {
+        "start": "2025-02-01",
+        "end": "2025-02-28"
+      }
+    ]
   }
 }
 ```
