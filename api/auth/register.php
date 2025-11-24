@@ -8,8 +8,6 @@ header("Access-Control-Allow-Credentials: true");
 require_once __DIR__ . '/../../config/database.php';
 
 $input = json_decode(file_get_contents("php://input"), true);
-file_put_contents("debug.txt", print_r($input, true));
-
 
 if (!$input) {
     echo json_encode(["success" => false, "message" => "Invalid JSON"]);
