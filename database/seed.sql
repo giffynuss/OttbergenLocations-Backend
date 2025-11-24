@@ -8,37 +8,37 @@ USE ottbergen_booking;
 -- Alle Test-Accounts haben das Passwort: "Test123!"
 
 -- User 1: Max Mustermann (Provider)
-INSERT INTO users (user_id, first_name, last_name, email, phone, street, house_number, zip_code, city, password_hash, salt, is_provider)
+INSERT INTO users (user_id, first_name, last_name, gender, email, phone, street, house_number, zip_code, city, password_hash, salt, is_provider)
 VALUES
-(1, 'Max', 'Mustermann', 'max.mustermann@example.com', '+49 5272 123456', 'Hauptstraße', '45', '37691', 'Ottbergen',
+(1, 'Max', 'Mustermann', 'herr', 'max.mustermann@example.com', '+49 5272 123456', 'Hauptstraße', '45', '37691', 'Ottbergen',
  SHA2(CONCAT('Test123!', 'salt1'), 256), 'salt1', 1)
 ON DUPLICATE KEY UPDATE email=VALUES(email);
 
 -- User 2: Maria Schmidt (Provider)
-INSERT INTO users (user_id, first_name, last_name, email, phone, street, house_number, zip_code, city, password_hash, salt, is_provider)
+INSERT INTO users (user_id, first_name, last_name, gender, email, phone, street, house_number, zip_code, city, password_hash, salt, is_provider)
 VALUES
-(2, 'Maria', 'Schmidt', 'maria.schmidt@example.com', '+49 5272 234567', 'Kirchweg', '12', '37691', 'Ottbergen',
+(2, 'Maria', 'Schmidt', 'frau', 'maria.schmidt@example.com', '+49 5272 234567', 'Kirchweg', '12', '37691', 'Ottbergen',
  SHA2(CONCAT('Test123!', 'salt2'), 256), 'salt2', 1)
 ON DUPLICATE KEY UPDATE email=VALUES(email);
 
 -- User 3: Hans Müller (Provider)
-INSERT INTO users (user_id, first_name, last_name, email, phone, street, house_number, zip_code, city, password_hash, salt, is_provider)
+INSERT INTO users (user_id, first_name, last_name, gender, email, phone, street, house_number, zip_code, city, password_hash, salt, is_provider)
 VALUES
-(3, 'Hans', 'Müller', 'hans.mueller@example.com', '+49 5272 345678', 'Waldweg', '23', '37691', 'Ottbergen',
+(3, 'Hans', 'Müller', 'herr', 'hans.mueller@example.com', '+49 5272 345678', 'Waldweg', '23', '37691', 'Ottbergen',
  SHA2(CONCAT('Test123!', 'salt3'), 256), 'salt3', 1)
 ON DUPLICATE KEY UPDATE email=VALUES(email);
 
 -- User 4: Anna Wagner (Normaler User/Kunde)
-INSERT INTO users (user_id, first_name, last_name, email, phone, street, house_number, zip_code, city, password_hash, salt, is_provider)
+INSERT INTO users (user_id, first_name, last_name, gender, email, phone, street, house_number, zip_code, city, password_hash, salt, is_provider)
 VALUES
-(4, 'Anna', 'Wagner', 'anna.wagner@example.com', '+49 5272 456789', 'Bergstraße', '7', '37691', 'Ottbergen',
+(4, 'Anna', 'Wagner', 'frau', 'anna.wagner@example.com', '+49 5272 456789', 'Bergstraße', '7', '37691', 'Ottbergen',
  SHA2(CONCAT('Test123!', 'salt4'), 256), 'salt4', 0)
 ON DUPLICATE KEY UPDATE email=VALUES(email);
 
 -- User 5: Thomas Klein (Normaler User/Kunde)
-INSERT INTO users (user_id, first_name, last_name, email, phone, street, house_number, zip_code, city, password_hash, salt, is_provider)
+INSERT INTO users (user_id, first_name, last_name, gender, email, phone, street, house_number, zip_code, city, password_hash, salt, is_provider)
 VALUES
-(5, 'Thomas', 'Klein', 'thomas.klein@example.com', '+49 5272 567890', 'Dorfstraße', '15', '37691', 'Ottbergen',
+(5, 'Thomas', 'Klein', 'herr', 'thomas.klein@example.com', '+49 5272 567890', 'Dorfstraße', '15', '37691', 'Ottbergen',
  SHA2(CONCAT('Test123!', 'salt5'), 256), 'salt5', 0)
 ON DUPLICATE KEY UPDATE email=VALUES(email);
 
