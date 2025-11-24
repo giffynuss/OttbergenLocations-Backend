@@ -87,7 +87,7 @@ try {
     $stmt->execute($params);
     $places = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-    // Für jeden Ort: Bilder laden und Daten formatieren
+    // Für jeden Ort: Bilder, Features laden und Daten formatieren
     foreach ($places as &$place) {
         // Bilder laden
         $imgStmt = $conn->prepare("
@@ -99,6 +99,22 @@ try {
         $imgStmt->execute(['place_id' => $place['id']]);
         $images = $imgStmt->fetchAll(PDO::FETCH_ASSOC);
         $place['images'] = array_column($images, 'url');
+
+        // Features laden
+        $featuresStmt = $conn->prepare("
+            SELECT name, icon, available
+            FROM place_features
+            WHERE place_id = :place_id
+            ORDER BY feature_id ASC
+        ");
+        $featuresStmt->execute(['place_id' => $place['id']]);
+        $features = $featuresStmt->fetchAll(PDO::FETCH_ASSOC);
+
+        // Features formatieren (available als boolean)
+        foreach ($features as &$feature) {
+            $feature['available'] = (bool)$feature['available'];
+        }
+        $place['features'] = $features;
 
         // Provider-Objekt formatieren
         $place['provider'] = [
