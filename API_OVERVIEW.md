@@ -1,513 +1,266 @@
 # API-Übersicht - OttbergenLocations Backend
 
-Vollständige Übersicht aller implementierten API-Endpoints für das OttbergenLocations-Projekt.
-
-## Base URL
-```
-http://localhost/OttbergenLocations-Backend
-```
+**Base URL:** `http://localhost/OttbergenLocations-Backend/api/`
 
 ## Authentifizierung
+Session-basierte Authentifizierung. CORS für `http://localhost:5173` (Frontend).
 
-Session-basierte Authentifizierung. Nach erfolgreichem Login wird eine Session erstellt.
+---
 
-### Login
-```http
-POST /login.php
-Content-Type: application/json
+## Auth-Endpoints
 
-{
-  "email": "user@example.com",
-  "password": "password123"
-}
-```
-
-**Response:**
+### POST /auth/register.php
+Neuen User registrieren.
 ```json
 {
-  "success": true,
-  "message": "Login erfolgreich"
+  "firstName": "Max", "lastName": "Mustermann", "gender": "herr",
+  "email": "max@example.com", "password": "password123",
+  "phone": "+49 123 456789", "street": "Hauptstraße", "houseNumber": "123",
+  "zipCode": "12345", "city": "Berlin"
 }
 ```
 
-### Registrierung
-```http
-POST /register.php
-Content-Type: application/json
-
-{
-  "firstName": "Max",
-  "lastName": "Mustermann",
-  "email": "max@example.com",
-  "password": "password123",
-  "phone": "+49 123 456789",
-  "street": "Hauptstraße",
-  "houseNumber": "123",
-  "zipCode": "12345",
-  "city": "Berlin"
-}
+### POST /auth/login.php
+User einloggen (Session wird erstellt).
+```json
+{ "email": "user@example.com", "password": "password123" }
 ```
 
-### Aktueller User
-```http
-GET /me.php
-```
+### POST /auth/logout.php
+User ausloggen.
+
+### GET /user/me.php
+🔒 Aktuell eingeloggten User abrufen.
+
+### POST /user/become-provider.php
+🔒 User wird zum Provider (setzt `is_provider = true`).
+
+### PATCH /user/update.php
+🔒 User-Daten aktualisieren.
+
+### POST /user/change_password.php
+🔒 Passwort ändern.
 
 ---
 
 ## Places (Orte)
 
-### 1. Liste aller Orte
-```http
-GET /api/places
-```
+### GET /places/list.php
+Liste aller aktiven Orte (Frontend-optimiert).
 
 **Query-Parameter (optional):**
-- `search` - Suchbegriff (Name, Beschreibung, Location)
-- `checkIn` - Anreisedatum (YYYY-MM-DD)
-- `checkOut` - Abreisedatum (YYYY-MM-DD)
+- `search` - Suche in Name, Beschreibung, Location
+- `location` - Filter nach Ort
 - `minCapacity` - Minimale Kapazität
 - `maxPrice` - Maximaler Preis pro Tag
-- `active` - Nur aktive Orte (true/false)
-
-**Beispiel:**
-```
-GET /api/places?search=kulturraum&minCapacity=50&maxPrice=300
-```
+- `checkIn`, `checkOut` - Nur verfügbare Orte (YYYY-MM-DD)
 
 **Response:**
 ```json
 {
   "success": true,
-  "data": [
-    {
-      "id": 1,
-      "name": "Kulturraum Ottbergen",
-      "description": "Ein wunderschöner Veranstaltungsraum...",
-      "location": "Ottbergen",
-      "capacity": 100,
-      "pricePerDay": 250,
-      "images": ["https://example.com/image1.jpg"],
-      "latitude": 51.7234,
-      "longitude": 9.3456,
-      "address": "Hauptstraße 45",
-      "postalCode": "37691",
-      "active": true,
-      "provider": {
-        "id": 1,
-        "name": "Max Mustermann",
-        "memberSince": "2024-01-15",
-        "verified": true
-      },
-      "createdAt": "2024-01-20T10:00:00Z",
-      "updatedAt": "2024-12-01T14:30:00Z"
-    }
-  ],
-  "total": 1
+  "places": [{
+    "id": 1, "name": "Kulturraum Ottbergen",
+    "description": "...", "location": "Ottbergen",
+    "capacity": 100, "pricePerDay": 250,
+    "latitude": 51.7234, "longitude": 9.3456,
+    "address": "Hauptstraße 45", "postalCode": "37691",
+    "active": true, "images": ["url1.jpg"],
+    "provider": { "id": 1, "name": "Max Mustermann" }
+  }]
 }
 ```
 
----
-
-### 2. Ort-Details
-```http
-GET /api/places/{id}
-```
-
-**Beispiel:**
-```
-GET /api/places/1
-```
+### GET /places/get.php?id={id}
+Einzelner Ort mit Details, Features und verfügbaren Zeiträumen.
 
 **Response:**
 ```json
 {
   "success": true,
-  "data": {
-    "id": 1,
-    "name": "Kulturraum Ottbergen",
-    "description": "Ein wunderschöner Veranstaltungsraum...",
-    "location": "Ottbergen",
-    "capacity": 100,
-    "pricePerDay": 250,
-    "images": [
-      "https://example.com/image1.jpg",
-      "https://example.com/image2.jpg"
-    ],
-    "latitude": 51.7234,
-    "longitude": 9.3456,
-    "address": "Hauptstraße 45",
-    "postalCode": "37691",
-    "active": true,
+  "place": {
+    "id": 1, "name": "Kulturraum Ottbergen", "...",
     "features": [
-      {
-        "id": 1,
-        "name": "WLAN verfügbar",
-        "icon": "wifi",
-        "available": true
-      },
-      {
-        "id": 2,
-        "name": "Parkmöglichkeiten",
-        "icon": "parking",
-        "available": true
-      }
+      { "id": 1, "name": "WLAN verfügbar", "category": "wifi" }
     ],
     "provider": {
-      "id": 1,
-      "name": "Max Mustermann",
-      "email": "max@example.com",
-      "phone": "+49 123 456789",
-      "memberSince": "2024-01-15",
-      "avatar": "https://example.com/avatar.jpg",
-      "verified": true
+      "id": 1, "name": "Max Mustermann",
+      "email": "max@example.com", "phone": "+49 123 456789"
     },
-    "createdAt": "2024-01-20T10:00:00Z",
-    "updatedAt": "2024-12-01T14:30:00Z"
-  }
-}
-```
-
----
-
-### 3. Verfügbarkeitsprüfung
-```http
-GET /api/places/{id}/availability?checkIn=YYYY-MM-DD&checkOut=YYYY-MM-DD
-```
-
-**Beispiel:**
-```
-GET /api/places/1/availability?checkIn=2025-12-15&checkOut=2025-12-20
-```
-
-**Response (verfügbar):**
-```json
-{
-  "success": true,
-  "available": true,
-  "blockedDates": [],
-  "message": "Der Ort ist im gewählten Zeitraum verfügbar."
-}
-```
-
-**Response (nicht verfügbar):**
-```json
-{
-  "success": true,
-  "available": false,
-  "blockedDates": ["2025-12-15", "2025-12-16", "2025-12-17"],
-  "message": "Der Ort ist in diesem Zeitraum bereits gebucht."
-}
-```
-
----
-
-### 4. Buchungskalender
-```http
-GET /api/places/{id}/calendar?months=12
-```
-
-**Beispiel:**
-```
-GET /api/places/1/calendar
-```
-
-**Response:**
-```json
-{
-  "success": true,
-  "data": {
-    "placeId": 1,
-    "bookedDates": [
-      {
-        "start": "2025-12-15",
-        "end": "2025-12-20"
-      },
-      {
-        "start": "2026-01-05",
-        "end": "2026-01-08"
-      }
+    "availableDates": [
+      { "start": "2025-01-01", "end": "2025-01-15" }
     ]
   }
 }
 ```
 
+### GET /places/availability.php?id={id}&checkIn={date}&checkOut={date}
+Verfügbarkeitsprüfung für Zeitraum.
+
+**Response:**
+```json
+{
+  "success": true,
+  "available": true,
+  "blockedDates": []
+}
+```
+
+### GET /places/calendar.php?id={id}&months=12
+Buchungskalender mit allen gebuchten Zeiträumen.
+
+---
+
+## Places Management (Provider) 🔒
+
+### GET /places/my-places.php
+🔒 Eigene Orte des Providers abrufen.
+
+### POST /places/create.php
+🔒 Neuen Ort erstellen (nur Provider).
+
+**Pflichtfelder:** `name`, `description`, `location`, `capacity`, `pricePerDay`
+**Optional:** `latitude`, `longitude`, `address`, `postalCode`, `active`, `images[]`, `features[]`
+
+### PATCH /places/update.php?id={id}
+🔒 Eigenen Ort aktualisieren.
+
+### DELETE /places/delete.php?id={id}
+🔒 Eigenen Ort löschen (nicht möglich bei aktiven Buchungen).
+
+### PATCH /places/toggle-active.php?id={id}
+🔒 Ort aktivieren/deaktivieren.
+
 ---
 
 ## Bookings (Buchungen)
 
-🔒 **Alle Booking-Endpoints erfordern Authentifizierung**
+### POST /bookings/create.php
+Neue Buchung erstellen. **KEINE Auth erforderlich** (Gast-Buchungen möglich).
 
-### 1. Buchung erstellen
-```http
-POST /api/bookings
-Content-Type: application/json
-
+**Request:**
+```json
 {
   "placeId": 1,
   "checkIn": "2025-12-15",
   "checkOut": "2025-12-20",
-  "guests": 50
+  "guests": 50,
+  "paymentMethod": "transfer",
+  "userInfo": {
+    "gender": "herr",
+    "firstName": "Max",
+    "lastName": "Mustermann",
+    "email": "max@example.com",
+    "phone": "+49 123 456789",
+    "street": "Musterstraße 123",
+    "postalCode": "12345",
+    "city": "Musterstadt"
+  }
 }
 ```
 
-**Response:**
+**Pflichtfelder:**
+- `placeId`, `checkIn`, `checkOut`, `guests`
+- `paymentMethod`: `cash`, `paypal`, `transfer`, `wero`
+- `userInfo`: `gender` (herr/frau), `firstName`, `lastName`, `email`, `phone`
+- Bei `transfer`: zusätzlich `street`, `postalCode`, `city`
+
+**Response (Success):**
 ```json
 {
   "success": true,
-  "data": {
+  "booking": {
     "id": 123,
     "placeId": 1,
     "placeName": "Kulturraum Ottbergen",
     "placeLocation": "Ottbergen",
-    "userId": 42,
+    "userId": null,
     "checkIn": "2025-12-15",
     "checkOut": "2025-12-20",
     "guests": 50,
-    "subtotal": 1250.00,
-    "serviceFee": 62.50,
-    "tax": 249.38,
-    "totalPrice": 1561.88,
+    "totalPrice": 1250.00,
+    "paymentMethod": "transfer",
+    "bookingReference": "BK20251124-1234",
     "status": "pending",
-    "createdAt": "2025-11-19T10:00:00Z"
+    "guestInfo": { "gender": "herr", "firstName": "Max", "..." }
   },
-  "message": "Buchung erfolgreich erstellt. Bitte warten Sie auf die Bestätigung des Anbieters."
-}
-```
-
-**Fehler-Codes:**
-- `PLACE_NOT_FOUND` - Ort existiert nicht
-- `PLACE_NOT_ACTIVE` - Ort ist nicht buchbar
-- `PLACE_NOT_AVAILABLE` - Ort ist im Zeitraum bereits gebucht
-- `INVALID_DATE_RANGE` - Ungültiger Datumsbereich
-- `CAPACITY_EXCEEDED` - Zu viele Gäste
-- `UNAUTHORIZED` - Nicht eingeloggt
-
----
-
-### 2. Eigene Buchungen
-```http
-GET /api/bookings?status=confirmed&page=1&limit=20
-```
-
-**Query-Parameter (optional):**
-- `status` - Filter nach Status (pending, confirmed, upcoming, completed, cancelled)
-- `page` - Seitennummer (Default: 1)
-- `limit` - Items pro Seite (Default: 20, Max: 100)
-
-**Response:**
-```json
-{
-  "success": true,
-  "data": [
-    {
-      "id": 123,
-      "placeId": 1,
-      "placeName": "Kulturraum Ottbergen",
-      "placeLocation": "Ottbergen",
-      "checkIn": "2025-12-15",
-      "checkOut": "2025-12-20",
-      "guests": 50,
-      "totalPrice": 1561.88,
-      "status": "confirmed",
-      "createdAt": "2025-11-19T10:00:00Z"
-    }
-  ],
-  "pagination": {
-    "page": 1,
-    "limit": 20,
-    "total": 1,
-    "pages": 1
-  }
-}
-```
-
----
-
-### 3. Buchungsdetails
-```http
-GET /api/bookings/{id}
-```
-
-**Response:**
-```json
-{
-  "success": true,
-  "data": {
-    "id": 123,
-    "placeId": 1,
-    "place": {
-      "name": "Kulturraum Ottbergen",
-      "location": "Ottbergen",
-      "address": "Hauptstraße 45",
-      "postalCode": "37691",
-      "images": ["https://example.com/image1.jpg"]
-    },
-    "provider": {
-      "id": 1,
-      "name": "Max Mustermann",
-      "email": "max@example.com",
-      "phone": "+49 123 456789"
-    },
-    "checkIn": "2025-12-15",
-    "checkOut": "2025-12-20",
-    "guests": 50,
-    "subtotal": 1250.00,
-    "serviceFee": 62.50,
-    "tax": 249.38,
-    "totalPrice": 1561.88,
-    "status": "confirmed",
-    "createdAt": "2025-11-19T10:00:00Z",
-    "updatedAt": "2025-11-19T11:30:00Z"
-  }
-}
-```
-
----
-
-### 4. Buchung stornieren
-```http
-PATCH /api/bookings/{id}/cancel
-Content-Type: application/json
-
-{
-  "reason": "Terminänderung"
-}
-```
-
-**Response:**
-```json
-{
-  "success": true,
-  "data": {
-    "id": 123,
-    "status": "cancelled",
-    "cancelledAt": "2025-11-20T09:00:00Z",
-    "cancellationReason": "Terminänderung",
-    "updatedAt": "2025-11-20T09:00:00Z"
+  "paymentDetails": {
+    "accountHolder": "Ottbergen Locations GmbH",
+    "iban": "DE89 3704 0044 0532 0130 00",
+    "bic": "COBADEFFXXX",
+    "bankName": "Commerzbank"
   },
-  "message": "Buchung erfolgreich storniert"
+  "message": "Buchung erfolgreich erstellt"
 }
 ```
 
 **Hinweise:**
-- Nur eigene Buchungen oder Buchungen für eigene Orte (als Provider) können storniert werden
-- Nur Status `pending`, `confirmed`, `upcoming` können storniert werden
-- Bei Überschreitung der Stornierungsfrist (48h) wird eine Warnung zurückgegeben
+- `bookingReference` wird automatisch generiert (Format: `BK{YYYYMMDD}-{4digits}`)
+- `paymentDetails` nur bei `paymentMethod === "transfer"`
+- `userId` ist `null` bei Gast-Buchungen
+- Preisberechnung erfolgt serverseitig
+- Gast-Informationen werden in `booking_guest_info` gespeichert
 
----
+### GET /bookings/index.php 🔒
+Eigene Buchungen abrufen (mit Filter & Pagination).
 
-### 5. Buchung bestätigen (nur Provider)
-```http
-PATCH /api/bookings/{id}/confirm
-```
+**Query-Parameter:**
+- `status` - Filter: pending, confirmed, upcoming, completed, cancelled
+- `page`, `limit` - Pagination
 
-**Response:**
-```json
-{
-  "success": true,
-  "data": {
-    "id": 123,
-    "status": "confirmed",
-    "updatedAt": "2025-11-20T10:00:00Z"
-  },
-  "message": "Buchung erfolgreich bestätigt"
-}
-```
+### GET /bookings/detail.php?id={id} 🔒
+Buchungsdetails abrufen.
 
-**Hinweise:**
-- Nur der Anbieter des gebuchten Ortes kann bestätigen
-- Nur Status `pending` kann bestätigt werden
-- Status wird automatisch zu `upcoming` wenn Check-in < 7 Tage
+### PATCH /bookings/cancel.php?id={id} 🔒
+Buchung stornieren (eigene oder als Provider).
 
----
+**Request:** `{ "reason": "Terminänderung" }`
 
-## Providers (Anbieter)
-
-### 1. Anbieter-Informationen
-```http
-GET /api/providers/{id}
-```
-
-**Response:**
-```json
-{
-  "success": true,
-  "data": {
-    "id": 1,
-    "name": "Max Mustermann",
-    "memberSince": "2024-01-15",
-    "avatar": "https://example.com/avatar.jpg",
-    "verified": true,
-    "placesCount": 3
-  }
-}
-```
-
----
-
-### 2. Orte eines Anbieters
-```http
-GET /api/providers/{id}/places
-```
-
-**Response:**
-```json
-{
-  "success": true,
-  "data": [
-    {
-      "id": 1,
-      "name": "Kulturraum Ottbergen",
-      "location": "Ottbergen",
-      "capacity": 100,
-      "pricePerDay": 250,
-      "images": ["https://example.com/image1.jpg"],
-      "active": true
-    }
-  ],
-  "total": 1
-}
-```
+### PATCH /bookings/confirm.php?id={id} 🔒
+Buchung bestätigen (nur Provider für eigene Orte).
 
 ---
 
 ## Fehlerbehandlung
 
-Alle Fehler-Responses folgen diesem Format:
-
+**Error Format:**
 ```json
 {
   "success": false,
-  "error": {
-    "code": "ERROR_CODE",
-    "message": "Benutzerfreundliche Fehlermeldung",
-    "details": {}
-  }
+  "message": "Fehlermeldung",
+  "errors": { /* optional details */ }
 }
 ```
 
-### Häufige Fehler-Codes:
+### HTTP Status Codes
+- `200` OK
+- `201` Created
+- `400` Bad Request (Validierungsfehler)
+- `401` Unauthorized (nicht eingeloggt)
+- `403` Forbidden (keine Berechtigung)
+- `404` Not Found
+- `405` Method Not Allowed
+- `409` Conflict (z.B. Ort nicht verfügbar)
+- `500` Internal Server Error
 
-| Code | HTTP Status | Beschreibung |
-|------|-------------|--------------|
-| `UNAUTHORIZED` | 401 | Nicht authentifiziert |
-| `FORBIDDEN` | 403 | Keine Berechtigung |
-| `PLACE_NOT_FOUND` | 404 | Ort existiert nicht |
-| `BOOKING_NOT_FOUND` | 404 | Buchung existiert nicht |
-| `INVALID_JSON` | 400 | Ungültige JSON-Daten |
-| `MISSING_FIELDS` | 400 | Pflichtfelder fehlen |
-| `INVALID_DATE_RANGE` | 400 | Ungültiger Datumsbereich |
-| `CAPACITY_EXCEEDED` | 400 | Zu viele Gäste |
-| `PLACE_NOT_AVAILABLE` | 409 | Ort ist bereits gebucht |
-| `INVALID_STATUS` | 400 | Ungültiger Status-Übergang |
-| `SERVER_ERROR` | 500 | Interner Serverfehler |
+### Häufige Error Codes
+- `UNAUTHORIZED` - Nicht authentifiziert
+- `FORBIDDEN` - Keine Berechtigung
+- `PLACE_NOT_FOUND` - Ort existiert nicht
+- `PLACE_NOT_AVAILABLE` - Ort im Zeitraum gebucht
+- `BOOKING_NOT_FOUND` - Buchung existiert nicht
+- `INVALID_JSON` - Ungültige JSON-Daten
+- `MISSING_FIELDS` - Pflichtfelder fehlen
+- `INVALID_DATE_RANGE` - Ungültiger Datumsbereich
+- `CAPACITY_EXCEEDED` - Zu viele Gäste
+- `INVALID_EMAIL` - Ungültige E-Mail-Adresse
+- `INVALID_GENDER` - Gender muss "herr" oder "frau" sein
+- `NOT_A_PROVIDER` - User ist kein Provider
+- `HAS_ACTIVE_BOOKINGS` - Ort hat aktive Buchungen
 
 ---
 
-## Status-Definitionen
-
-### Booking-Status:
+## Booking-Status
 
 | Status | Beschreibung |
 |--------|--------------|
@@ -517,13 +270,12 @@ Alle Fehler-Responses folgen diesem Format:
 | `completed` | Abgeschlossen, Check-out erfolgt |
 | `cancelled` | Storniert |
 
-### Erlaubte Status-Übergänge:
-
+**Erlaubte Übergänge:**
 ```
-pending → confirmed (durch Provider)
-pending → cancelled (durch User/Provider)
-confirmed → upcoming (automatisch bei < 7 Tagen)
-confirmed → cancelled (durch User/Provider)
+pending → confirmed (Provider)
+pending → cancelled (User/Provider)
+confirmed → upcoming (automatisch < 7 Tage)
+confirmed → cancelled (User/Provider)
 upcoming → completed (automatisch am Check-out)
 upcoming → cancelled (nur Provider)
 ```
@@ -532,44 +284,52 @@ upcoming → cancelled (nur Provider)
 
 ## Preisberechnung
 
-Alle Preise werden automatisch berechnet:
-
 ```
 Anzahl Tage = checkOut - checkIn
-Zwischensumme = pricePerDay × Anzahl Tage
-Servicegebühr = Zwischensumme × 5%
-MwSt = (Zwischensumme + Servicegebühr) × 19%
-Gesamtpreis = Zwischensumme + Servicegebühr + MwSt
+Gesamtpreis = pricePerDay × Anzahl Tage
 ```
-
-Prozentsätze sind in der `settings`-Tabelle konfigurierbar.
 
 ---
 
 ## Datum-Format
 
-**API sendet/empfängt:**
-- Datum: `YYYY-MM-DD` (z.B. `2025-12-15`)
-- Zeitstempel: ISO 8601 `YYYY-MM-DDTHH:mm:ssZ` (z.B. `2025-11-19T10:00:00Z`)
+- **Datum:** `YYYY-MM-DD` (z.B. `2025-12-15`)
+- **Zeitstempel:** ISO 8601 `YYYY-MM-DDTHH:mm:ssZ`
 
 ---
 
 ## Implementierungsstatus
 
-✅ **Vollständig implementiert:**
-- Alle Places-Endpoints
-- Alle Bookings-Endpoints
-- Provider-Endpoints
-- Auth-System (Login, Register)
+### ✅ Vollständig implementiert
+- Alle Places-Endpoints (öffentlich + Management)
+- Booking-System mit Gast-Buchungen
+- Auth-System (Login, Register, Provider)
+- Zahlungsmethoden (cash, transfer mit Mock-Bankdaten)
 - Validierung & Fehlerbehandlung
-- Preisberechnung
 - Verfügbarkeitsprüfung
-- Autorisierung
+- Autorisierung & Zugriffskontrolle
 
-⏳ **Noch zu implementieren (Nice-to-have):**
-- Email-Benachrichtigungen
-- Bild-Upload für Places
+### ⏳ Noch nicht implementiert
+- E-Mail-Benachrichtigungen
+- PayPal/Wero Integration
+- Provider-Bankdaten-Verwaltung
+- Bild-Upload
 - Bewertungssystem
-- Favoriten/Merkliste
-- Zahlungsintegration
 - Admin-Panel
+
+---
+
+## Wichtige Hinweise
+
+1. **CORS:** Konfiguriert für `http://localhost:5173`
+2. **Sessions:** Cookie-basiert mit `credentials: include`
+3. **Gender:** Nur "herr" oder "frau" (lowercase)
+4. **Booking-Reference:** Wird automatisch generiert
+5. **Mock-Bankdaten:** Bei transfer-Zahlung von Ottbergen Locations GmbH
+6. **Gast-Buchungen:** Möglich ohne Login, `user_id = NULL`
+
+---
+
+**Version:** 1.1
+**Letztes Update:** 2024-11-24
+**Backend-Team**

@@ -134,6 +134,22 @@ PATCH http://localhost/OttbergenLocations-Backend/api/bookings/1/cancel
 | POST | `/login.php` | Login |
 | GET | `/me.php` | Aktueller User |
 
+### User (Benutzer)
+
+| Methode | Endpoint | Beschreibung |
+|---------|----------|--------------|
+| POST | `/api/user/become-provider.php` | Als Provider registrieren (Auth erforderlich) |
+
+### Places Management (Provider)
+
+| Methode | Endpoint | Beschreibung |
+|---------|----------|--------------|
+| GET | `/api/places/my-places.php` | Eigene Orte abrufen (Auth erforderlich) |
+| POST | `/api/places/create.php` | Neuen Ort erstellen (Provider erforderlich) |
+| PATCH | `/api/places/update.php?id={id}` | Ort aktualisieren (nur eigener Ort) |
+| DELETE | `/api/places/delete.php?id={id}` | Ort löschen (nur eigener Ort) |
+| PATCH | `/api/places/toggle-active.php?id={id}` | Ort aktivieren/deaktivieren (nur eigener Ort) |
+
 ## Testing
 
 ### 1. API-Test mit Browser oder Postman
