@@ -266,13 +266,15 @@ Buchung bestätigen (nur Provider für eigene Orte).
 |--------|--------------|
 | `pending` | Buchung angefragt, wartet auf Bestätigung |
 | `confirmed` | Buchung bestätigt, Check-in > 7 Tage |
+| `rejected` | Buchung vom Provider abgelehnt |
 | `upcoming` | Bestätigt, Check-in < 7 Tage |
 | `completed` | Abgeschlossen, Check-out erfolgt |
 | `cancelled` | Storniert |
 
 **Erlaubte Übergänge:**
 ```
-pending → confirmed (Provider)
+pending → confirmed (Provider / per E-Mail-Token)
+pending → rejected (Provider / per E-Mail-Token)
 pending → cancelled (User/Provider)
 confirmed → upcoming (automatisch < 7 Tage)
 confirmed → cancelled (User/Provider)
@@ -309,8 +311,16 @@ Gesamtpreis = pricePerDay × Anzahl Tage
 - Verfügbarkeitsprüfung
 - Autorisierung & Zugriffskontrolle
 
+### ✅ E-Mail-System (implementiert)
+- Buchungsbenachrichtigungen an Provider per E-Mail
+- Bestätigen/Ablehnen per E-Mail-Token-Link
+- Unterstützt Gmail & Outlook SMTP
+- Konfiguration: `config/mail.php`
+- Endpoints:
+  - `GET /bookings/confirm-token.php?token={token}` - Buchung bestätigen
+  - `GET /bookings/reject-token.php?token={token}` - Buchung ablehnen
+
 ### ⏳ Noch nicht implementiert
-- E-Mail-Benachrichtigungen
 - PayPal/Wero Integration
 - Provider-Bankdaten-Verwaltung
 - Bild-Upload
@@ -330,6 +340,13 @@ Gesamtpreis = pricePerDay × Anzahl Tage
 
 ---
 
-**Version:** 1.1
-**Letztes Update:** 2024-11-24
+**Version:** 1.2
+**Letztes Update:** 2025-11-25
+**Changelog:**
+- v1.2: E-Mail-Benachrichtigungen implementiert (Gmail/Outlook SMTP)
+- v1.2: Status 'rejected' für Buchungen hinzugefügt
+- v1.2: Token-basierte Buchungsbestätigung/-ablehnung per E-Mail
+- v1.1: Gast-Buchungen & Checkout-System
+- v1.0: Basis-APIs für Places, Bookings, Auth
+
 **Backend-Team**

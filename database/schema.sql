@@ -92,8 +92,11 @@ CREATE TABLE IF NOT EXISTS bookings (
     payment_method ENUM('cash', 'paypal', 'transfer', 'wero') DEFAULT 'cash',
     booking_reference VARCHAR(50) UNIQUE,
 
-    -- Status
-    status ENUM('pending', 'confirmed', 'upcoming', 'completed', 'cancelled') DEFAULT 'pending',
+    -- Status (inkl. 'rejected' für E-Mail-basierte Ablehnung)
+    status ENUM('pending', 'confirmed', 'rejected', 'upcoming', 'completed', 'cancelled') DEFAULT 'pending',
+
+    -- E-Mail-Bestätigung
+    confirmation_token VARCHAR(64) DEFAULT NULL COMMENT 'Token für Bestätigung/Ablehnung per E-Mail',
 
     -- Stornierung
     cancelled_at TIMESTAMP NULL,
@@ -107,7 +110,8 @@ CREATE TABLE IF NOT EXISTS bookings (
     INDEX idx_check_in (check_in),
     INDEX idx_check_out (check_out),
     INDEX idx_dates (check_in, check_out),
-    INDEX idx_booking_reference (booking_reference)
+    INDEX idx_booking_reference (booking_reference),
+    INDEX idx_confirmation_token (confirmation_token)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Booking Guest Info Tabelle (Gast-Informationen für Buchungen)

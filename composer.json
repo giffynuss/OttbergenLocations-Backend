@@ -1,0 +1,14 @@
+{
+    "name": "ottbergen/locations-backend",
+    "description": "Backend for Ottbergen Locations Booking System",
+    "type": "project",
+    "require": {
+        "php": ">=7.4",
+        "phpmailer/phpmailer": "^6.9"
+    },
+    "autoload": {
+        "psr-4": {
+            "Ottbergen\\": "src/"
+        }
+    }
+}
