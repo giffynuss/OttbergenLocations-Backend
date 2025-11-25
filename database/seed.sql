@@ -99,23 +99,26 @@ INSERT INTO places (name, description, location, capacity, price_per_day, latitu
 
 -- Bilder für Places
 INSERT INTO place_images (place_id, url) VALUES
--- Kulturraum Ottbergen
-(1, 'https://images.unsplash.com/photo-1519167758481-83f29da8ee8a?w=800'),
-(1, 'https://images.unsplash.com/photo-1464366400600-7168b8af9bc3?w=800'),
-(1, 'https://images.unsplash.com/photo-1511578314322-379afb476865?w=800'),
 
--- Gemeindesaal St. Marien
-(2, 'https://images.unsplash.com/photo-1478146896981-b80fe463b330?w=800'),
-(2, 'https://images.unsplash.com/photo-1464366400600-7168b8af9bc3?w=800'),
+-- 1. Kulturraum Ottbergen (modern, hell, Kultur & Kurse)
+(1, 'https://images.unsplash.com/photo-1533090161767-e6ffed986c88?w=900'), -- moderner Veranstaltungsraum
+(1, 'https://images.unsplash.com/photo-1521737711867-e3b97375f902?w=900'), -- Workshop-/Seminarraum
+(1, 'https://images.unsplash.com/photo-1529107386315-e1a2ed48a620?w=900'), -- Kulturveranstaltung / Meetingraum
 
--- Dorfgemeinschaftshaus
-(3, 'https://images.unsplash.com/photo-1504253163759-c23fccaebb55?w=800'),
-(3, 'https://images.unsplash.com/photo-1478146896981-b80fe463b330?w=800'),
+-- 2. Gemeindesaal St. Marien (kirchennah, hell, Saal für Feiern)
+(2, 'https://images.unsplash.com/photo-1520880867055-1e30d1cb001c?w=900'), -- Gemeindesaal stilvoll gedeckt
+(2, 'https://images.unsplash.com/photo-1520483691742-8aee3564a1b0?w=900'), -- ruhiger, heller Saal
+(2, 'https://images.unsplash.com/photo-1519681393784-d120267933ba?w=900'), -- offener Raum für Veranstaltungen
 
--- Scheune am Waldrand
-(4, 'https://images.unsplash.com/photo-1519225421980-715cb0215aed?w=800'),
-(4, 'https://images.unsplash.com/photo-1464366400600-7168b8af9bc3?w=800'),
-(4, 'https://images.unsplash.com/photo-1511578314322-379afb476865?w=800');
+-- 3. Dorfgemeinschaftshaus (bodenständig, rustikal aber modern)
+(3, 'https://images.unsplash.com/photo-1531058020387-3be344556be6?w=900'), -- rustikaler Mehrzweckraum
+(3, 'https://images.unsplash.com/photo-1519710164239-da123dc03ef4?w=900'), -- Vereins-/Dorfsaal
+(3, 'https://images.unsplash.com/photo-1560448075-bb4b1d1ea24b?w=900'), -- einfache Feier-/Sitzmöglichkeit
+
+-- 4. Scheune am Waldrand (Scheune, Waldnähe, rustikal, warm)
+(4, 'https://images.unsplash.com/photo-1506784983877-45594efa4cbe?w=900'), -- Scheune innen, rustikal
+(4, 'https://images.unsplash.com/photo-1470337458703-46ad1756a187?w=900'), -- Scheunenfeier / Landhausstil
+(4, 'https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?w=900'); -- Waldnähe / Naturstimmung
 
 -- Features für Places
 INSERT INTO place_features (place_id, name, icon, available) VALUES

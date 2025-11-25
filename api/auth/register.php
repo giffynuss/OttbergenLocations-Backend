@@ -14,6 +14,55 @@ if (!$input) {
     exit;
 }
 
+// Pflichtfelder prüfen
+$required = [
+    "firstName",
+    "lastName",
+    "gender",
+    "email",
+    "phone",
+    "street",
+    "houseNumber",
+    "zipCode",
+    "city",
+    "password"
+];
+
+foreach ($required as $field) {
+    if (!isset($input[$field]) || trim($input[$field]) === "") {
+        echo json_encode(["success" => false, "message" => "Feld '$field' fehlt oder ist leer"]);
+        exit;
+    }
+}
+
+// EMAIL vailidieren
+if (!filter_var($input["email"], FILTER_VALIDATE_EMAIL)) {
+    echo json_encode(["success" => false, "message" => "Bitte geben Sie eine gültige E-Mail-Adresse ein"]);
+}
+
+// Passwörter prüfen
+$password = $input["password"];
+$confirmPassword = $input["confirmPassword"];
+
+if (strlen($password) < 10) {
+    echo json_encode(["success" => false, "message" => "Passwort muss mindestens 10 Zeichen lang sein"]);
+}
+if (!preg_match('/[a-z]/', $password)) {
+    echo json_encode(["success" => false, "message" => "Mindestens 1 Kleinbuchstabe muss enthalten sein"]);
+}
+if (!preg_match('/[A-Z]/', $password)) {
+    echo json_encode(["success" => false, "message" => "Mindestens 1 Großbuchstabe muss enthalten sein"]);
+}
+if (!preg_match('/\d/', $password)) {
+    echo json_encode(["success" => false, "message" => "Mindestens 1 Zahl muss enthalten sein"]);
+}
+if (!preg_match('/[!@#$%^&*+(),.?\":{}|<>_\-]/', $password)) {
+    echo json_encode(["success" => false, "message" => "Mindestens 1 Sonderzeichen muss enthalten sein"]);
+}
+if (isset($confirmPassword) && $confirmPassword !== $password) {
+    echo json_encode(["success" => false, "message" => "Passwörter stimmen nicht überein"]);
+}
+
 $db = new Database();
 $conn = $db->getConnection();
 
