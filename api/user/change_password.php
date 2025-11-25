@@ -124,7 +124,7 @@ try {
 
     echo json_encode([
         "success" => true,
-        "message" => "Passwort erfolgreich geändern"
+        "message" => "Passwort erfolgreich geändert"
     ]);
     exit;
 } catch (Exception $e) {
