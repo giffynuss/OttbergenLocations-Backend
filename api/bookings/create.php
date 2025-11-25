@@ -178,6 +178,13 @@ try {
 
     $bookingId = $conn->lastInsertId();
 
+    // Token generieren für Bestätigung/Ablehnung per E-Mail
+    $token = bin2hex(random_bytes(32));
+
+    // Token in Datenbank speichern
+    $tokenStmt = $conn->prepare("UPDATE bookings SET confirmation_token = :token WHERE booking_id = :booking_id");
+    $tokenStmt->execute(['token' => $token, 'booking_id' => $bookingId]);
+
     // Gast-Informationen speichern
     saveGuestInfo($conn, $bookingId, $userInfo);
 
@@ -225,6 +232,73 @@ try {
     if ($paymentMethod === 'transfer') {
         $response['paymentDetails'] = getMockBankDetails();
     }
+
+    // ========== E-MAIL-BENACHRICHTIGUNG AN ANBIETER ==========
+    // E-Mail-Versand ist optional - wenn PHPMailer nicht installiert ist, wird die Buchung trotzdem erstellt
+    error_log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+    error_log("📧 E-MAIL BENACHRICHTIGUNG - Booking #{$bookingId}");
+    error_log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+
+    if (file_exists(__DIR__ . '/../../vendor/autoload.php')) {
+        error_log("✓ PHPMailer gefunden");
+        try {
+            require_once __DIR__ . '/../../services/EmailService.php';
+            error_log("✓ EmailService geladen");
+
+            // Provider-Daten laden
+            $providerStmt = $conn->prepare("
+                SELECT user_id, first_name, last_name, email, phone
+                FROM users
+                WHERE user_id = :user_id
+            ");
+            $providerStmt->execute(['user_id' => $place['user_id']]);
+            $provider = $providerStmt->fetch(PDO::FETCH_ASSOC);
+
+            if ($provider) {
+                error_log("✓ Provider gefunden: " . $provider['email']);
+
+                $emailService = new EmailService();
+                error_log("✓ EmailService initialisiert");
+
+                // Buchungsdaten für E-Mail vorbereiten
+                $bookingForEmail = [
+                    'check_in' => $checkIn,
+                    'check_out' => $checkOut,
+                    'guests' => $guests,
+                    'total_price' => $pricing['totalPrice'],
+                    'payment_method' => $paymentMethod,
+                    'booking_reference' => $bookingReference
+                ];
+
+                // E-Mail an Anbieter senden
+                error_log("→ Sende E-Mail an Provider...");
+                $emailResult = $emailService->sendBookingRequestToProvider(
+                    $bookingForEmail,
+                    $place,
+                    $provider,
+                    $guestInfo,
+                    $token
+                );
+
+                // Log-Eintrag bei Fehler (blockiert aber nicht die Response)
+                if ($emailResult['success']) {
+                    error_log("✓✓✓ E-MAIL ERFOLGREICH: " . $emailResult['message']);
+                } else {
+                    error_log("✗✗✗ E-MAIL FEHLGESCHLAGEN: " . $emailResult['message']);
+                }
+            } else {
+                error_log("✗ Provider nicht gefunden (user_id: " . $place['user_id'] . ")");
+            }
+        } catch (Exception $emailException) {
+            // E-Mail-Fehler loggen, aber Buchung war erfolgreich
+            error_log("✗✗✗ E-MAIL EXCEPTION: " . $emailException->getMessage());
+            error_log("Stack Trace: " . $emailException->getTraceAsString());
+        }
+    } else {
+        // PHPMailer nicht installiert - E-Mail wird übersprungen
+        error_log("✗ PHPMailer (vendor/autoload.php) nicht gefunden");
+    }
+    error_log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
 
     http_response_code(201);
     echo json_encode($response, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
