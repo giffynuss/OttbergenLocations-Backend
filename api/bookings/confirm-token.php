@@ -31,6 +31,7 @@ try {
             b.payment_method,
             b.booking_reference,
             b.status,
+            b.cancellation_token,
             p.name as place_name,
             p.location as place_location,
             p.user_id as provider_id

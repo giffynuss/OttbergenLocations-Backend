@@ -51,7 +51,7 @@ class EmailService
     /**
      * Sendet Buchungsanfrage-Bestätigung an User (Status: pending)
      *
-     * @param array $booking Buchungsdaten
+     * @param array $booking Buchungsdaten (muss 'cancellation_token' enthalten)
      * @param array $place Ortsdaten
      * @param array $guestInfo Gastdaten
      * @return array ['success' => bool, 'message' => string]
@@ -65,6 +65,12 @@ class EmailService
             $this->mailer->isHTML(true);
             $this->mailer->Subject = "Ihre Buchungsanfrage bei OttbergenLocations - {$place['name']}";
 
+            // Stornierungslink generieren (falls Token vorhanden)
+            $cancellationLink = '';
+            if (!empty($booking['cancellation_token'])) {
+                $cancellationLink = $this->config['base_url'] . "/api/bookings/cancel-token.php?token={$booking['cancellation_token']}";
+            }
+
             $html = $this->loadTemplate('booking_request_user', [
                 'salutation' => $this->formatSalutation($guestInfo['gender'] ?? '', $guestInfo['lastName']),
                 'place_name' => $place['name'],
@@ -75,7 +81,8 @@ class EmailService
                 'total_price' => number_format($booking['total_price'], 2, ',', '.'),
                 'payment_method' => $this->getPaymentMethodLabel($booking['payment_method']),
                 'bank_details' => $this->formatBankDetails(),
-                'booking_reference' => $booking['booking_reference']
+                'booking_reference' => $booking['booking_reference'],
+                'cancellation_link' => $cancellationLink
             ]);
 
             $this->mailer->Body = $html;
@@ -153,7 +160,7 @@ class EmailService
     /**
      * Sendet Bestätigung an User mit Zahlungsdetails
      *
-     * @param array $booking Buchungsdaten
+     * @param array $booking Buchungsdaten (muss 'cancellation_token' enthalten)
      * @param array $place Ortsdaten
      * @param array $provider Anbieterdaten
      * @param array $guestInfo Gastdaten
@@ -168,6 +175,12 @@ class EmailService
             $this->mailer->isHTML(true);
             $this->mailer->Subject = "Buchung bestätigt - {$place['name']} - " . $this->formatDate($booking['check_in']);
 
+            // Stornierungslink generieren (falls Token vorhanden)
+            $cancellationLink = '';
+            if (!empty($booking['cancellation_token'])) {
+                $cancellationLink = $this->config['base_url'] . "/api/bookings/cancel-token.php?token={$booking['cancellation_token']}";
+            }
+
             $html = $this->loadTemplate('booking_confirmation_user', [
                 'salutation' => $this->formatSalutation($guestInfo['gender'] ?? '', $guestInfo['lastName']),
                 'place_name' => $place['name'],
@@ -181,7 +194,8 @@ class EmailService
                 'booking_reference' => $booking['booking_reference'],
                 'provider_name' => $provider['first_name'] . ' ' . $provider['last_name'],
                 'provider_phone' => $provider['phone'] ?? 'Nicht verfügbar',
-                'provider_email' => $provider['email']
+                'provider_email' => $provider['email'],
+                'cancellation_link' => $cancellationLink
             ]);
 
             $this->mailer->Body = $html;

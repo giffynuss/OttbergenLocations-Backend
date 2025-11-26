@@ -279,6 +279,22 @@
 
             <div class="divider"></div>
 
+            <!-- Stornierungsinformationen -->
+            <div style="background-color: #fff3cd; border-left: 4px solid #ff9800; padding: 20px; margin: 25px 0;">
+                <h3 style="font-family: 'Playfair Display', Georgia, serif; color: #856404; font-size: 18px; margin-top: 0; margin-bottom: 10px;">Stornierung</h3>
+                <p style="margin: 0 0 10px 0; color: #5c442f; font-size: 14px;">
+                    Falls Sie Ihre Buchungsanfrage stornieren möchten, können Sie dies jederzeit über den untenstehenden Link tun.
+                </p>
+                <?php if (!empty($cancellation_link)): ?>
+                <p style="text-align: center; margin: 15px 0;">
+                    <a href="<?= $cancellation_link ?>" style="display: inline-block; padding: 12px 30px; background-color: #8b6f47; color: #ffffff; text-decoration: none; font-weight: 700; font-size: 14px; box-shadow: 0 4px 6px rgba(61, 40, 23, 0.15);">Buchung stornieren</a>
+                </p>
+                <?php endif; ?>
+                <p style="margin: 10px 0 0 0; color: #856404; font-size: 12px;">
+                    <strong>Hinweis:</strong> Die Stornierung ist in der Regel kostenlos. Nach der Stornierung erhalten Sie eine Bestätigungs-E-Mail.
+                </p>
+            </div>
+
             <p style="text-align: center;">Bei Fragen stehen wir Ihnen gerne zur Verfügung.</p>
         </div>
 
