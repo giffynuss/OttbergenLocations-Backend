@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Buchungsbestätigung - OttbergenLocations</title>
+    <title>Buchungsanfrage erhalten - OttbergenLocations</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Lato:wght@300;400;700&display=swap');
 
@@ -55,18 +55,18 @@
             margin-bottom: 15px;
         }
 
-        .success-message {
-            background-color: #d4f4dd;
-            border-left: 4px solid #4CAF50;
+        .pending-message {
+            background-color: #fff3cd;
+            border-left: 4px solid #b8946f;
             padding: 20px;
             margin: 25px 0;
         }
 
-        .success-message p {
-            color: #2e7d32;
+        .pending-message p {
+            color: #856404;
             font-weight: 700;
             margin: 0;
-            font-size: 18px;
+            font-size: 16px;
         }
 
         .details-box {
@@ -74,14 +74,6 @@
             padding: 25px;
             margin: 25px 0;
             border-left: 4px solid #b8946f;
-        }
-
-        .details-box h3 {
-            font-family: 'Playfair Display', Georgia, serif;
-            color: #3d2817;
-            font-size: 18px;
-            margin-top: 0;
-            margin-bottom: 15px;
         }
 
         .details-box table {
@@ -102,6 +94,37 @@
 
         .details-box td:last-child {
             color: #5c442f;
+        }
+
+        .payment-box {
+            background-color: #e3f2fd;
+            border-left: 4px solid #1976d2;
+            padding: 25px;
+            margin: 25px 0;
+        }
+
+        .payment-box h3 {
+            font-family: 'Playfair Display', Georgia, serif;
+            color: #1976d2;
+            font-size: 20px;
+            margin-top: 0;
+            margin-bottom: 15px;
+        }
+
+        .payment-box p {
+            margin: 8px 0;
+            color: #5c442f;
+        }
+
+        .payment-box strong {
+            color: #3d2817;
+        }
+
+        .bank-details {
+            background-color: #ffffff;
+            padding: 15px;
+            margin: 15px 0;
+            border: 1px solid #d4c4b0;
         }
 
         .info-box {
@@ -176,19 +199,20 @@
 
         <!-- Content -->
         <div class="content">
-            <h2>Buchungsbestätigung</h2>
+            <h2>Ihre Buchungsanfrage</h2>
 
             <p><?= htmlspecialchars($salutation) ?>,</p>
 
-            <div class="success-message">
-                <p>&#10004; Sie haben die Buchung erfolgreich bestätigt.</p>
+            <p>vielen Dank für Ihre Buchungsanfrage über OttbergenLocations!</p>
+
+            <div class="pending-message">
+                <p>&#9200; Ihre Buchung befindet sich im Status "Ausstehend" und wartet auf die Bestätigung des Anbieters.</p>
             </div>
 
-            <p>Dies ist eine Kopie der Buchungsbestätigung für Ihre Unterlagen.</p>
+            <p>Wir haben Ihre Anfrage erhalten und an den Anbieter weitergeleitet. Sie erhalten eine weitere E-Mail, sobald der Anbieter Ihre Buchung bestätigt oder ablehnt.</p>
 
             <!-- Buchungsdetails -->
             <div class="details-box">
-                <h3>Buchungsdetails</h3>
                 <table>
                     <tr>
                         <td>Buchungsreferenz:</td>
@@ -197,6 +221,10 @@
                     <tr>
                         <td>Location:</td>
                         <td><?= htmlspecialchars($place_name) ?></td>
+                    </tr>
+                    <tr>
+                        <td>Standort:</td>
+                        <td><?= htmlspecialchars($place_location) ?></td>
                     </tr>
                     <tr>
                         <td>Check-in:</td>
@@ -215,40 +243,43 @@
                         <td><strong style="font-size: 18px; color: #b8946f;"><?= $total_price ?> &euro;</strong></td>
                     </tr>
                     <tr>
+                        <td>Zahlungsmethode:</td>
+                        <td><?= htmlspecialchars($payment_method) ?></td>
+                    </tr>
+                    <tr>
                         <td>Status:</td>
-                        <td><span class="highlight">Bestätigt</span></td>
+                        <td><span class="highlight">Ausstehend</span></td>
                     </tr>
                 </table>
             </div>
 
-            <!-- Gast-Informationen -->
-            <div class="details-box">
-                <h3>Gast-Informationen</h3>
-                <table>
-                    <tr>
-                        <td>Name:</td>
-                        <td><?= htmlspecialchars($guest_name) ?></td>
-                    </tr>
-                    <tr>
-                        <td>E-Mail:</td>
-                        <td><a href="mailto:<?= htmlspecialchars($guest_email) ?>" style="color: #5c442f;"><?= htmlspecialchars($guest_email) ?></a></td>
-                    </tr>
-                    <tr>
-                        <td>Telefon:</td>
-                        <td><a href="tel:<?= htmlspecialchars($guest_phone) ?>" style="color: #5c442f;"><?= htmlspecialchars($guest_phone) ?></a></td>
-                    </tr>
-                </table>
+            <?php if (strpos($payment_method, 'Überweisung') !== false): ?>
+            <!-- Zahlungsinformationen bei Überweisung (für später) -->
+            <div class="payment-box">
+                <h3>Zahlungsinformationen</h3>
+                <p>Nach Bestätigung durch den Anbieter überweisen Sie bitte den Betrag von <strong><?= $total_price ?> &euro;</strong> an folgendes Konto:</p>
+
+                <div class="bank-details">
+                    <?= $bank_details ?>
+                    <p style="margin-top: 15px;">
+                        <strong>Verwendungszweck:</strong><br>
+                        <?= htmlspecialchars($booking_reference) ?>
+                    </p>
+                </div>
+
+                <p style="font-size: 14px; color: #856404; margin-top: 15px;">
+                    <strong>Wichtig:</strong> Bitte überweisen Sie den Betrag erst nach Bestätigung der Buchung und bis spätestens 7 Tage vor Check-in.
+                </p>
             </div>
+            <?php endif; ?>
 
             <div class="info-box">
-                <p><strong>Info:</strong> Der Gast wurde über die Bestätigung informiert und erhält alle notwendigen Zahlungsinformationen sowie Ihre Kontaktdaten.</p>
+                <p><strong>Hinweis:</strong> Sie erhalten eine weitere E-Mail, sobald der Anbieter Ihre Buchung bestätigt oder ablehnt. Dies erfolgt in der Regel innerhalb von 24-48 Stunden.</p>
             </div>
 
             <div class="divider"></div>
 
-            <p style="text-align: center; margin-top: 25px;">
-                Vielen Dank für Ihre Zusammenarbeit!
-            </p>
+            <p style="text-align: center;">Bei Fragen stehen wir Ihnen gerne zur Verfügung.</p>
         </div>
 
         <!-- Footer -->

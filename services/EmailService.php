@@ -49,6 +49,48 @@ class EmailService
     }
 
     /**
+     * Sendet Buchungsanfrage-Bestätigung an User (Status: pending)
+     *
+     * @param array $booking Buchungsdaten
+     * @param array $place Ortsdaten
+     * @param array $guestInfo Gastdaten
+     * @return array ['success' => bool, 'message' => string]
+     */
+    public function sendBookingRequestToUser($booking, $place, $guestInfo)
+    {
+        try {
+            $this->mailer->clearAddresses();
+            $this->mailer->addAddress($guestInfo['email'], $guestInfo['firstName'] . ' ' . $guestInfo['lastName']);
+
+            $this->mailer->isHTML(true);
+            $this->mailer->Subject = "Ihre Buchungsanfrage bei OttbergenLocations - {$place['name']}";
+
+            $html = $this->loadTemplate('booking_request_user', [
+                'salutation' => $this->formatSalutation($guestInfo['gender'] ?? '', $guestInfo['lastName']),
+                'place_name' => $place['name'],
+                'place_location' => $place['location'],
+                'check_in' => $this->formatDate($booking['check_in']),
+                'check_out' => $this->formatDate($booking['check_out']),
+                'guests' => $booking['guests'],
+                'total_price' => number_format($booking['total_price'], 2, ',', '.'),
+                'payment_method' => $this->getPaymentMethodLabel($booking['payment_method']),
+                'bank_details' => $this->formatBankDetails(),
+                'booking_reference' => $booking['booking_reference']
+            ]);
+
+            $this->mailer->Body = $html;
+            $this->mailer->AltBody = strip_tags($html);
+
+            $this->mailer->send();
+            return ['success' => true, 'message' => 'Buchungsanfrage-E-Mail an User gesendet'];
+
+        } catch (Exception $e) {
+            error_log("E-Mail-Fehler: {$this->mailer->ErrorInfo}");
+            return ['success' => false, 'message' => "E-Mail konnte nicht gesendet werden: {$this->mailer->ErrorInfo}"];
+        }
+    }
+
+    /**
      * Sendet Buchungsanfrage an Anbieter mit Bestätigen/Ablehnen-Links
      *
      * @param array $booking Buchungsdaten
@@ -75,13 +117,13 @@ class EmailService
             $rejectLink = $this->config['base_url'] . "/api/bookings/reject-token.php?token={$token}";
 
             $html = $this->loadTemplate('booking_request_provider', [
-                'provider_name' => $provider['first_name'] . ' ' . $provider['last_name'],
+                'salutation' => $this->formatSalutation($provider['gender'] ?? '', $provider['last_name']),
                 'place_name' => $place['name'],
                 'check_in' => $this->formatDate($booking['check_in']),
                 'check_out' => $this->formatDate($booking['check_out']),
                 'guests' => $booking['guests'],
                 'total_price' => number_format($booking['total_price'], 2, ',', '.'),
-                'guest_name' => $guestInfo['firstName'] . ' ' . $guestInfo['lastName'],
+                'guest_name' => $this->formatGuestName($guestInfo),
                 'guest_email' => $guestInfo['email'],
                 'guest_phone' => $guestInfo['phone'],
                 'guest_address' => $this->formatAddress($guestInfo),
@@ -124,10 +166,10 @@ class EmailService
             $this->mailer->addAddress($guestInfo['email'], $guestInfo['firstName'] . ' ' . $guestInfo['lastName']);
 
             $this->mailer->isHTML(true);
-            $this->mailer->Subject = "Ihre Buchung wurde bestätigt! 🎉";
+            $this->mailer->Subject = "Buchung bestätigt - {$place['name']} - " . $this->formatDate($booking['check_in']);
 
             $html = $this->loadTemplate('booking_confirmation_user', [
-                'guest_first_name' => $guestInfo['firstName'],
+                'salutation' => $this->formatSalutation($guestInfo['gender'] ?? '', $guestInfo['lastName']),
                 'place_name' => $place['name'],
                 'place_location' => $place['location'],
                 'check_in' => $this->formatDate($booking['check_in']),
@@ -173,13 +215,13 @@ class EmailService
             $this->mailer->Subject = "Buchungsbestätigung - {$place['name']}";
 
             $html = $this->loadTemplate('booking_confirmation_provider', [
-                'provider_name' => $provider['first_name'] . ' ' . $provider['last_name'],
+                'salutation' => $this->formatSalutation($provider['gender'] ?? '', $provider['last_name']),
                 'place_name' => $place['name'],
                 'check_in' => $this->formatDate($booking['check_in']),
                 'check_out' => $this->formatDate($booking['check_out']),
                 'guests' => $booking['guests'],
                 'total_price' => number_format($booking['total_price'], 2, ',', '.'),
-                'guest_name' => $guestInfo['firstName'] . ' ' . $guestInfo['lastName'],
+                'guest_name' => $this->formatGuestName($guestInfo),
                 'guest_phone' => $guestInfo['phone'],
                 'guest_email' => $guestInfo['email'],
                 'booking_reference' => $booking['booking_reference']
@@ -206,22 +248,23 @@ class EmailService
      * @param string $reason Ablehnungsgrund
      * @return array ['success' => bool, 'message' => string]
      */
-    public function sendBookingRejectionToUser($booking, $place, $guestInfo, $reason)
+    public function sendBookingRejectionToUser($booking, $place, $guestInfo, $reason = '')
     {
         try {
             $this->mailer->clearAddresses();
             $this->mailer->addAddress($guestInfo['email'], $guestInfo['firstName'] . ' ' . $guestInfo['lastName']);
 
             $this->mailer->isHTML(true);
-            $this->mailer->Subject = "Buchungsanfrage wurde abgelehnt - {$place['name']}";
+            $this->mailer->Subject = "Buchungsanfrage abgelehnt - {$place['name']}";
 
             $html = $this->loadTemplate('booking_rejection_user', [
-                'guest_first_name' => $guestInfo['firstName'],
+                'salutation' => $this->formatSalutation($guestInfo['gender'] ?? '', $guestInfo['lastName']),
                 'place_name' => $place['name'],
                 'check_in' => $this->formatDate($booking['check_in']),
                 'check_out' => $this->formatDate($booking['check_out']),
                 'rejection_reason' => $reason ?: 'Keine Angabe',
-                'booking_reference' => $booking['booking_reference']
+                'booking_reference' => $booking['booking_reference'],
+                'frontend_url' => $this->getFrontendUrl()
             ]);
 
             $this->mailer->Body = $html;
@@ -229,6 +272,51 @@ class EmailService
 
             $this->mailer->send();
             return ['success' => true, 'message' => 'Ablehnungs-E-Mail an User gesendet'];
+
+        } catch (Exception $e) {
+            error_log("E-Mail-Fehler: {$this->mailer->ErrorInfo}");
+            return ['success' => false, 'message' => "E-Mail konnte nicht gesendet werden: {$this->mailer->ErrorInfo}"];
+        }
+    }
+
+    /**
+     * Sendet Stornierungsbestätigung an User
+     *
+     * @param array $booking Buchungsdaten
+     * @param array $place Ortsdaten
+     * @param array $guestInfo Gastdaten
+     * @param string $reason Stornierungsgrund (optional)
+     * @param string $refundInfo Rückerstattungsinformationen (optional)
+     * @return array ['success' => bool, 'message' => string]
+     */
+    public function sendBookingCancellationToUser($booking, $place, $guestInfo, $reason = '', $refundInfo = '')
+    {
+        try {
+            $this->mailer->clearAddresses();
+            $this->mailer->addAddress($guestInfo['email'], $guestInfo['firstName'] . ' ' . $guestInfo['lastName']);
+
+            $this->mailer->isHTML(true);
+            $this->mailer->Subject = "Stornierung bestätigt - {$place['name']}";
+
+            $html = $this->loadTemplate('booking_cancellation', [
+                'salutation' => $this->formatSalutation($guestInfo['gender'] ?? '', $guestInfo['lastName']),
+                'place_name' => $place['name'],
+                'place_location' => $place['location'],
+                'check_in' => $this->formatDate($booking['check_in']),
+                'check_out' => $this->formatDate($booking['check_out']),
+                'guests' => $booking['guests'],
+                'total_price' => number_format($booking['total_price'], 2, ',', '.'),
+                'booking_reference' => $booking['booking_reference'],
+                'cancellation_reason' => $reason,
+                'refund_info' => $refundInfo,
+                'frontend_url' => $this->getFrontendUrl()
+            ]);
+
+            $this->mailer->Body = $html;
+            $this->mailer->AltBody = strip_tags($html);
+
+            $this->mailer->send();
+            return ['success' => true, 'message' => 'Stornierungsbestätigung an User gesendet'];
 
         } catch (Exception $e) {
             error_log("E-Mail-Fehler: {$this->mailer->ErrorInfo}");
@@ -303,5 +391,58 @@ class EmailService
             'wero' => 'Wero'
         ];
         return $labels[$method] ?? $method;
+    }
+
+    /**
+     * Formatiert Anrede basierend auf Gender
+     *
+     * @param string $gender 'herr' oder 'frau' (lowercase aus DB)
+     * @param string $lastName Nachname
+     * @return string Formatierte Anrede (z.B. "Sehr geehrter Herr Müller")
+     */
+    private function formatSalutation($gender, $lastName)
+    {
+        $gender = strtolower(trim($gender));
+
+        if ($gender === 'herr') {
+            return "Sehr geehrter Herr " . htmlspecialchars($lastName);
+        } elseif ($gender === 'frau') {
+            return "Sehr geehrte Frau " . htmlspecialchars($lastName);
+        } else {
+            // Fallback wenn Gender nicht gesetzt oder unbekannt
+            return "Sehr geehrte Damen und Herren";
+        }
+    }
+
+    /**
+     * Formatiert Gast-Name mit Gender-Titel
+     *
+     * @param array $guestInfo Gastdaten mit firstName, lastName, gender
+     * @return string Formatierter Name mit Anrede
+     */
+    private function formatGuestName($guestInfo)
+    {
+        $gender = strtolower(trim($guestInfo['gender'] ?? ''));
+        $title = '';
+
+        if ($gender === 'herr') {
+            $title = 'Herr ';
+        } elseif ($gender === 'frau') {
+            $title = 'Frau ';
+        }
+
+        return $title . $guestInfo['firstName'] . ' ' . $guestInfo['lastName'];
+    }
+
+    /**
+     * Gibt die Frontend-URL zurück (aus config oder Standard)
+     *
+     * @return string Frontend-URL
+     */
+    private function getFrontendUrl()
+    {
+        // Standardmäßig localhost:5173 für Entwicklung
+        // In Produktion sollte dies in der Config gesetzt werden
+        return $this->config['frontend_url'] ?? 'http://localhost:5173';
     }
 }
