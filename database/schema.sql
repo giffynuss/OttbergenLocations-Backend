@@ -1,6 +1,6 @@
 -- OttbergenLocations Database Schema
 -- Erstellt: 2025-11-20
--- Aktualisiert: 2025-11-24 - Checkout-Funktionalität hinzugefügt
+-- Aktualisiert: 2025-11-27 - Security Audit & Dokumentation aktualisiert
 
 -- Datenbank erstellen (falls noch nicht vorhanden)
 CREATE DATABASE IF NOT EXISTS ottbergen_booking CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;

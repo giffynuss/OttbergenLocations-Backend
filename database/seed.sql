@@ -42,6 +42,12 @@ VALUES
  SHA2(CONCAT('Test123!', 'salt5'), 256), 'salt5', 0)
 ON DUPLICATE KEY UPDATE email=VALUES(email);
 
+INSERT INTO users (user_id, first_name, last_name, gender, email, phone, street, house_number, zip_code, city, password_hash, salt, is_provider)
+VALUES
+(6, 'Patryk', 'Bulla', 'herr', 'patrykbulla980@gmail.com', '+49 5272 567890', 'Dorfstraße', '15', '37691', 'Ottbergen',
+ SHA2(CONCAT('Passwort123?', 'salt6'), 256), 'salt6', 0)
+ON DUPLICATE KEY UPDATE email=VALUES(email);
+
 -- Places (Orte) erstellen
 INSERT INTO places (name, description, location, capacity, price_per_day, latitude, longitude, address, postal_code, user_id, active) VALUES
 (
@@ -81,6 +87,19 @@ INSERT INTO places (name, description, location, capacity, price_per_day, latitu
     'Dorfstraße 8',
     '37691',
     2,
+    1
+),
+(
+    'Katzenscheune',
+    'Gemütliche Scheune mit rustikalem Charme. Ideal für private Feiern im kleinen Kreis. Voll ausgestattete Küche vorhanden.',
+    'Geheimort',
+    40,
+    100.00,
+    40.7298,
+    9.3423,
+    'Dorfstraße 8',
+    '37691',
+    6,
     1
 ),
 (

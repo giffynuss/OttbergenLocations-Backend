@@ -506,9 +506,12 @@ Gesamtpreis = pricePerDay × Anzahl Tage
 
 ---
 
-**Version:** 1.3
+**Version:** 1.4
 **Letztes Update:** 2025-11-27
 **Changelog:**
+- v1.4: **SQL Injection Security Audit** durchgeführt - Alle Endpoints sicher ✅
+- v1.4: Security Report erstellt ([SECURITY_AUDIT_REPORT.md](SECURITY_AUDIT_REPORT.md))
+- v1.4: Dokumentation aktualisiert (Schema, Seed, Installation, README)
 - v1.3: `/bookings/get.php` Endpoint hinzugefügt für Frontend-Kompatibilität
 - v1.3: CORS-Header in allen Booking-Endpoints für Session-Support aktualisiert
 - v1.3: Response-Format von `/bookings/index.php` angepasst (`bookings` statt `data`)

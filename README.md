@@ -79,7 +79,11 @@ OttbergenLocations-Backend/
 - **E-Mail-Benachrichtigungen** - Bestätigung/Ablehnung per Token-Link
 - **Verfügbarkeitsprüfung** - Automatische Kollisionserkennung
 - **Zahlungsmethoden** - Cash, PayPal, Überweisung, Wero
-- **Security** - SQL Injection Schutz, Input-Validierung, Autorisierung
+- **Security** - ✅ SQL Injection Audit bestanden (42 Tests, 0 Vulnerabilities)
+  - 100% PDO Prepared Statements
+  - Input Validierung & Sanitization
+  - Authorization & Authentication
+  - Security Report: [SECURITY_AUDIT_REPORT.md](SECURITY_AUDIT_REPORT.md)
 
 ### 📧 E-Mail-System
 - Provider erhält E-Mail bei neuer Buchung
@@ -169,6 +173,15 @@ Detaillierte Hilfe: [INSTALLATION.md](INSTALLATION.md)
 6. ✅ BASE_URL in `config/mail.php` auf Production-Domain setzen
 
 ## 📝 Version
+
+**v1.4** (2025-11-27)
+- **SQL Injection Security Audit** durchgeführt (42 Tests, 0 Vulnerabilities) ✅
+- Security Report: [SECURITY_AUDIT_REPORT.md](SECURITY_AUDIT_REPORT.md)
+- Dokumentation vollständig aktualisiert
+
+**v1.3** (2025-11-27)
+- Frontend-Kompatibilität verbessert
+- CORS-Header optimiert
 
 **v1.2** (2025-11-25)
 - E-Mail-Benachrichtigungen mit Token-Links
