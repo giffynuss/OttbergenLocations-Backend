@@ -179,11 +179,23 @@ try {
     $bookingId = $conn->lastInsertId();
 
     // Token generieren für Bestätigung/Ablehnung per E-Mail
-    $token = bin2hex(random_bytes(32));
+    $confirmationToken = bin2hex(random_bytes(32));
 
-    // Token in Datenbank speichern
-    $tokenStmt = $conn->prepare("UPDATE bookings SET confirmation_token = :token WHERE booking_id = :booking_id");
-    $tokenStmt->execute(['token' => $token, 'booking_id' => $bookingId]);
+    // Stornierungstoken generieren
+    $cancellationToken = bin2hex(random_bytes(32));
+
+    // Tokens in Datenbank speichern
+    $tokenStmt = $conn->prepare("
+        UPDATE bookings
+        SET confirmation_token = :confirmation_token,
+            cancellation_token = :cancellation_token
+        WHERE booking_id = :booking_id
+    ");
+    $tokenStmt->execute([
+        'confirmation_token' => $confirmationToken,
+        'cancellation_token' => $cancellationToken,
+        'booking_id' => $bookingId
+    ]);
 
     // Gast-Informationen speichern
     saveGuestInfo($conn, $bookingId, $userInfo);
@@ -267,7 +279,8 @@ try {
                     'guests' => $guests,
                     'total_price' => $pricing['totalPrice'],
                     'payment_method' => $paymentMethod,
-                    'booking_reference' => $bookingReference
+                    'booking_reference' => $bookingReference,
+                    'cancellation_token' => $cancellationToken
                 ];
 
                 // E-Mail an Anbieter senden
@@ -277,7 +290,15 @@ try {
                     $place,
                     $provider,
                     $guestInfo,
-                    $token
+                    $confirmationToken
+                );
+
+                // E-Mail an User/Gast senden (Buchungsanfrage-Bestätigung)
+                error_log("→ Sende Buchungsanfrage-Bestätigung an User...");
+                $userEmailResult = $emailService->sendBookingRequestToUser(
+                    $bookingForEmail,
+                    $place,
+                    $guestInfo
                 );
 
                 // Log-Eintrag bei Fehler (blockiert aber nicht die Response)

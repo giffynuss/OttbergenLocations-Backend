@@ -205,19 +205,173 @@ Neue Buchung erstellen. **KEINE Auth erforderlich** (Gast-Buchungen möglich).
 Eigene Buchungen abrufen (mit Filter & Pagination).
 
 **Query-Parameter:**
-- `status` - Filter: pending, confirmed, upcoming, completed, cancelled
-- `page`, `limit` - Pagination
+- `status` - Filter: pending, confirmed, upcoming, completed, cancelled, rejected
+- `page` - Seitenzahl (Standard: 1)
+- `limit` - Anzahl pro Seite (Standard: 20, Max: 100)
+
+**Response:**
+```json
+{
+  "success": true,
+  "bookings": [
+    {
+      "id": 123,
+      "placeId": 1,
+      "placeName": "Kulturraum Ottbergen",
+      "placeLocation": "Ottbergen",
+      "userId": 5,
+      "checkIn": "2025-12-15",
+      "checkOut": "2025-12-20",
+      "guests": 50,
+      "totalPrice": 1250.00,
+      "paymentMethod": "transfer",
+      "bookingReference": "BK20251124-1234",
+      "status": "pending",
+      "cancelledAt": null,
+      "cancellationReason": null
+    }
+  ],
+  "pagination": {
+    "page": 1,
+    "limit": 20,
+    "total": 5,
+    "pages": 1
+  }
+}
+```
+
+### GET /bookings/get.php?id={id} 🔒
+Einzelne Buchung anhand der ID abrufen. User kann eigene Buchungen sehen, Provider können Buchungen für ihre Orte sehen.
+
+**Query-Parameter:**
+- `id` - Buchungs-ID (Pflicht)
+
+**Response (Success):**
+```json
+{
+  "success": true,
+  "booking": {
+    "id": 123,
+    "placeId": 1,
+    "placeName": "Kulturraum Ottbergen",
+    "placeLocation": "Ottbergen",
+    "userId": 5,
+    "checkIn": "2025-12-15",
+    "checkOut": "2025-12-20",
+    "guests": 50,
+    "totalPrice": 1250.00,
+    "paymentMethod": "transfer",
+    "bookingReference": "BK20251124-1234",
+    "status": "pending",
+    "cancelledAt": null,
+    "cancellationReason": null
+  }
+}
+```
+
+**Error Responses:**
+- `MISSING_ID` - Buchungs-ID fehlt
+- `BOOKING_NOT_FOUND` - Buchung nicht gefunden
+- `FORBIDDEN` - Keine Berechtigung für diese Buchung
 
 ### GET /bookings/detail.php?id={id} 🔒
-Buchungsdetails abrufen.
+Erweiterte Buchungsdetails mit Place-Informationen und Provider-Kontaktdaten abrufen.
 
 ### PATCH /bookings/cancel.php?id={id} 🔒
-Buchung stornieren (eigene oder als Provider).
+Buchung stornieren (eigene oder als Provider). Sendet automatisch Stornierungsbestätigungs-E-Mail.
 
 **Request:** `{ "reason": "Terminänderung" }`
 
+**Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "id": 123,
+    "status": "cancelled",
+    "cancelledAt": "2025-11-26 14:30:00",
+    "cancellationReason": "Terminänderung"
+  },
+  "message": "Buchung erfolgreich storniert."
+}
+```
+
+### GET/POST /bookings/cancel-token.php?token={token}
+Buchung per Token stornieren (ohne Authentifizierung). Wird von E-Mail-Links verwendet.
+
+**Request (POST, optional):** `{ "reason": "Grund der Stornierung" }`
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "id": 123,
+    "status": "cancelled",
+    "cancelledAt": "2025-11-26 14:30:00",
+    "cancellationReason": "Stornierung durch Gast via E-Mail-Link"
+  },
+  "message": "Buchung erfolgreich storniert. Sie erhalten eine Bestätigungs-E-Mail."
+}
+```
+
+**Error Responses:**
+- `MISSING_TOKEN` - Token fehlt
+- `INVALID_TOKEN` - Token ungültig oder abgelaufen
+- `INVALID_STATUS` - Buchung kann nicht storniert werden (z.B. bereits completed)
+
 ### PATCH /bookings/confirm.php?id={id} 🔒
 Buchung bestätigen (nur Provider für eigene Orte).
+
+### GET /bookings/confirm-token.php?token={token}
+Buchung per Token bestätigen (für Provider, ohne Login). Wird von E-Mail-Links verwendet.
+
+### GET /bookings/reject-token.php?token={token}
+Buchung per Token ablehnen (für Provider, ohne Login). Wird von E-Mail-Links verwendet.
+
+---
+
+## E-Mail-Benachrichtigungen
+
+Das System sendet automatisch E-Mails bei folgenden Ereignissen:
+
+### Bei Buchungserstellung (`/bookings/create.php`)
+1. **An User/Gast:** Buchungsanfrage-Bestätigung (Status: pending)
+   - Enthält alle Buchungsdetails
+   - **Stornierungsbutton** mit Token-Link
+   - Hinweis: Wartet auf Bestätigung des Anbieters
+
+2. **An Provider:** Benachrichtigung über neue Buchungsanfrage
+   - Mit Gast-Informationen
+   - Bestätigen/Ablehnen-Buttons mit Token-Links
+
+### Bei Buchungsbestätigung (`/bookings/confirm-token.php`)
+1. **An User/Gast:** Buchungsbestätigung
+   - Status: confirmed
+   - Zahlungsinformationen (bei Überweisung: Bankdaten)
+   - Kontaktdaten des Providers
+   - **Stornierungsbutton** mit Token-Link
+
+2. **An Provider:** Bestätigungskopie für Unterlagen
+
+### Bei Buchungsablehnung (`/bookings/reject-token.php`)
+- **An User/Gast:** Ablehnungsbenachrichtigung
+  - Grund der Ablehnung (falls angegeben)
+  - Link zu weiteren verfügbaren Locations
+
+### Bei Stornierung (`/bookings/cancel.php` oder `/bookings/cancel-token.php`)
+- **An User/Gast:** Stornierungsbestätigung
+  - Buchungsdetails
+  - Stornierungsgrund
+  - Rückerstattungsinformationen (falls relevant)
+
+**E-Mail-Design:**
+- Luxury-Farbschema (Braun-Gold-Töne)
+- Responsive Design (Mobile-optimiert)
+- Klare Call-to-Action-Buttons
+- Deutsche Anrede basierend auf Gender (Herr/Frau)
+
+**Konfiguration:** `config/mail.php`
 
 ---
 
@@ -257,6 +411,10 @@ Buchung bestätigen (nur Provider für eigene Orte).
 - `INVALID_GENDER` - Gender muss "herr" oder "frau" sein
 - `NOT_A_PROVIDER` - User ist kein Provider
 - `HAS_ACTIVE_BOOKINGS` - Ort hat aktive Buchungen
+- `MISSING_TOKEN` - Token fehlt
+- `INVALID_TOKEN` - Token ungültig oder abgelaufen
+- `INVALID_STATUS` - Buchung hat ungültigen Status für diese Aktion
+- `CANCELLATION_DEADLINE_PASSED` - Stornierungsfrist abgelaufen (optional, wenn aktiviert)
 
 ---
 
@@ -340,9 +498,12 @@ Gesamtpreis = pricePerDay × Anzahl Tage
 
 ---
 
-**Version:** 1.2
-**Letztes Update:** 2025-11-25
+**Version:** 1.3
+**Letztes Update:** 2025-11-27
 **Changelog:**
+- v1.3: `/bookings/get.php` Endpoint hinzugefügt für Frontend-Kompatibilität
+- v1.3: CORS-Header in allen Booking-Endpoints für Session-Support aktualisiert
+- v1.3: Response-Format von `/bookings/index.php` angepasst (`bookings` statt `data`)
 - v1.2: E-Mail-Benachrichtigungen implementiert (Gmail/Outlook SMTP)
 - v1.2: Status 'rejected' für Buchungen hinzugefügt
 - v1.2: Token-basierte Buchungsbestätigung/-ablehnung per E-Mail

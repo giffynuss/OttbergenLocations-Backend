@@ -16,8 +16,11 @@ return [
     'from_email' => 'patrykbulla.work@gmail.com',
     'from_name' => 'Ottbergen Locations',
 
-    // Basis-URL für Links in E-Mails
+    // Basis-URL für Links in E-Mails (Backend)
     'base_url' => 'http://localhost/OttbergenLocations-Backend',
+
+    // Frontend-URL für Links in E-Mails
+    'frontend_url' => 'http://localhost:5173',
 
     // Bankdaten für Überweisungen (statisch)
     'bank_details' => [

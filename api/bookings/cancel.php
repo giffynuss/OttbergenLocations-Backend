@@ -2,7 +2,8 @@
 // PATCH /api/bookings/:id/cancel - Buchung stornieren
 
 header("Content-Type: application/json; charset=utf-8");
-header("Access-Control-Allow-Origin: *");
+header("Access-Control-Allow-Origin: http://localhost:5173");
+header("Access-Control-Allow-Credentials: true");
 header("Access-Control-Allow-Methods: PATCH, OPTIONS");
 header("Access-Control-Allow-Headers: Content-Type, Authorization");
 
@@ -15,6 +16,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 require_once __DIR__ . '/../../config/database.php';
 require_once __DIR__ . '/../../helpers/auth.php';
 require_once __DIR__ . '/../../helpers/pricing.php';
+require_once __DIR__ . '/../../helpers/booking.php';
+require_once __DIR__ . '/../../services/EmailService.php';
 
 if ($_SERVER['REQUEST_METHOD'] !== 'PATCH' && $_SERVER['REQUEST_METHOD'] !== 'POST') {
     http_response_code(405);
@@ -114,6 +117,42 @@ try {
         'booking_id' => $bookingId,
         'reason' => $reason
     ]);
+
+    // Place-Daten laden für E-Mail
+    $placeStmt = $conn->prepare("
+        SELECT place_id, name, location
+        FROM places
+        WHERE place_id = :place_id
+    ");
+    $placeStmt->execute(['place_id' => $booking['place_id']]);
+    $place = $placeStmt->fetch(PDO::FETCH_ASSOC);
+
+    // Gast-Informationen laden für E-Mail
+    $guestInfo = getGuestInfo($conn, $bookingId);
+
+    // E-Mail versenden wenn Gast-Info vorhanden
+    if ($guestInfo && $place) {
+        try {
+            $emailService = new EmailService();
+
+            $placeData = [
+                'name' => $place['name'],
+                'location' => $place['location']
+            ];
+
+            // Stornierungsbestätigung an User senden
+            $emailService->sendBookingCancellationToUser(
+                $booking,
+                $placeData,
+                $guestInfo,
+                $reason,
+                '' // Rückerstattungsinfo kann hier hinzugefügt werden
+            );
+        } catch (Exception $emailError) {
+            // E-Mail-Fehler nur loggen, aber Stornierung nicht blockieren
+            error_log("E-Mail-Fehler bei Stornierung: " . $emailError->getMessage());
+        }
+    }
 
     // Aktualisierte Buchung laden
     $resultStmt = $conn->prepare("

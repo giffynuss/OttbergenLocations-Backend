@@ -1,5 +1,5 @@
 <?php
-// GET /api/bookings/:id - Detailansicht einer Buchung
+// GET /api/bookings/get.php?id={bookingId} - Einzelne Buchung laden
 
 header("Content-Type: application/json; charset=utf-8");
 header("Access-Control-Allow-Origin: http://localhost:5173");
@@ -35,46 +35,46 @@ try {
     $db = new Database();
     $conn = $db->getConnection();
 
-    $bookingId = isset($_GET['id']) ? intval($_GET['id']) : null;
+    $bookingId = $_GET['id'] ?? null;
 
     if (!$bookingId) {
         http_response_code(400);
         echo json_encode([
             'success' => false,
             'error' => [
-                'code' => 'INVALID_ID',
-                'message' => 'Ungültige Buchungs-ID.'
+                'code' => 'MISSING_ID',
+                'message' => 'Buchungs-ID fehlt.'
             ]
         ]);
         exit;
     }
 
-    // Buchung laden
-    $stmt = $conn->prepare("
+    // SQL Query mit JOIN
+    $sql = "
         SELECT
             b.booking_id as id,
             b.place_id as placeId,
+            p.name as placeName,
+            p.location as placeLocation,
+            b.user_id as userId,
             b.check_in as checkIn,
             b.check_out as checkOut,
             b.guests,
             b.total_price as totalPrice,
+            b.payment_method as paymentMethod,
+            b.booking_reference as bookingReference,
             b.status,
             b.cancelled_at as cancelledAt,
             b.cancellation_reason as cancellationReason,
-            p.name as placeName,
-            p.location as placeLocation,
-            p.address as placeAddress,
-            p.postal_code as placePostalCode,
-            u.user_id as providerId,
-            CONCAT(u.first_name, ' ', u.last_name) as providerName,
-            u.email as providerEmail,
-            u.phone as providerPhone
+            p.user_id as providerId
         FROM bookings b
-        JOIN places p ON b.place_id = p.place_id
-        JOIN users u ON p.user_id = u.user_id
-        WHERE b.booking_id = :booking_id
-    ");
-    $stmt->execute(['booking_id' => $bookingId]);
+        LEFT JOIN places p ON b.place_id = p.place_id
+        WHERE b.booking_id = :bookingId
+    ";
+
+    $stmt = $conn->prepare($sql);
+    $stmt->bindParam(':bookingId', $bookingId, PDO::PARAM_INT);
+    $stmt->execute();
     $booking = $stmt->fetch(PDO::FETCH_ASSOC);
 
     if (!$booking) {
@@ -89,68 +89,34 @@ try {
         exit;
     }
 
-    // Autorisierung: Nur eigene Buchungen oder Anbieter
-    if (!canAccessBooking($conn, $bookingId, $userId)) {
+    // Berechtigungsprüfung: User ist Owner oder Provider
+    if ($booking['userId'] != $userId && $booking['providerId'] != $userId) {
         http_response_code(403);
         echo json_encode([
             'success' => false,
             'error' => [
                 'code' => 'FORBIDDEN',
-                'message' => 'Keine Berechtigung für diese Buchung.'
+                'message' => 'Sie haben keine Berechtigung, diese Buchung zu sehen.'
             ]
         ]);
         exit;
     }
 
-    // Bilder des Places laden
-    $imgStmt = $conn->prepare("
-        SELECT url
-        FROM place_images
-        WHERE place_id = :place_id
-        ORDER BY sort_order ASC
-        LIMIT 1
-    ");
-    $imgStmt->execute(['place_id' => $booking['placeId']]);
-    $images = $imgStmt->fetchAll(PDO::FETCH_COLUMN);
-
-    // Response formatieren
-    $booking['place'] = [
-        'name' => $booking['placeName'],
-        'location' => $booking['placeLocation'],
-        'address' => $booking['placeAddress'],
-        'postalCode' => $booking['placePostalCode'],
-        'images' => $images
-    ];
-
-    $booking['provider'] = [
-        'id' => (int)$booking['providerId'],
-        'name' => $booking['providerName'],
-        'email' => $booking['providerEmail'],
-        'phone' => $booking['providerPhone']
-    ];
-
-    // Unbenötigte Felder entfernen
-    unset(
-        $booking['placeName'],
-        $booking['placeLocation'],
-        $booking['placeAddress'],
-        $booking['placePostalCode'],
-        $booking['providerId'],
-        $booking['providerName'],
-        $booking['providerEmail'],
-        $booking['providerPhone']
-    );
+    // Entferne interne Felder
+    unset($booking['providerId']);
 
     // Datentypen konvertieren
     $booking['id'] = (int)$booking['id'];
     $booking['placeId'] = (int)$booking['placeId'];
+    $booking['userId'] = (int)$booking['userId'];
     $booking['guests'] = (int)$booking['guests'];
     $booking['totalPrice'] = (float)$booking['totalPrice'];
 
+    // Response
     echo json_encode([
         'success' => true,
-        'data' => $booking
-    ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+        'booking' => $booking
+    ], JSON_UNESCAPED_UNICODE);
 
 } catch (Exception $e) {
     http_response_code(500);
