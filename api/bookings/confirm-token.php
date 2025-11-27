@@ -7,10 +7,17 @@ require_once __DIR__ . '/../../config/database.php';
 require_once __DIR__ . '/../../services/EmailService.php';
 require_once __DIR__ . '/../../helpers/booking.php';
 
+// Frontend-URL aus Umgebungsvariablen oder Standard
+$frontend_url = getenv('FRONTEND_URL') ?: 'http://localhost:5173';
+
 $token = $_GET['token'] ?? null;
 
 if (!$token) {
-    showErrorPage('Ungültiger Link', 'Es wurde kein Token übergeben.');
+    $error_title = 'Ungültiger Link';
+    $error_message = 'Es wurde kein Token übergeben.';
+    $error_details = '';
+    $retry_url = '';
+    require __DIR__ . '/../../templates/error_page.php';
     exit;
 }
 
@@ -44,10 +51,11 @@ try {
     $booking = $stmt->fetch(PDO::FETCH_ASSOC);
 
     if (!$booking) {
-        showErrorPage(
-            'Link ungültig oder abgelaufen',
-            'Dieser Bestätigungslink ist ungültig, wurde bereits verwendet oder die Buchung wurde bereits bearbeitet.'
-        );
+        $error_title = 'Link ungültig oder abgelaufen';
+        $error_message = 'Dieser Bestätigungslink ist ungültig, wurde bereits verwendet oder die Buchung wurde bereits bearbeitet.';
+        $error_details = '';
+        $retry_url = '';
+        require __DIR__ . '/../../templates/error_page.php';
         exit;
     }
 
@@ -83,110 +91,14 @@ try {
     $emailService->sendBookingConfirmationToProvider($booking, $place, $provider, $guestInfo);
 
     // Erfolgsseite anzeigen
-    showSuccessPage(
-        'Buchung erfolgreich bestätigt! ✓',
-        'Die Buchung wurde bestätigt. Der Gast und Sie selbst haben eine Bestätigungs-E-Mail mit allen Details erhalten.',
-        $booking['booking_reference']
-    );
+    $booking_reference = $booking['booking_reference'];
+    require __DIR__ . '/../../templates/booking_confirmation_success.php';
 
 } catch (Exception $e) {
     error_log("Fehler bei Buchungsbestätigung: " . $e->getMessage());
-    showErrorPage('Fehler', 'Ein Fehler ist aufgetreten. Bitte kontaktieren Sie den Support.');
-}
-
-// Hilfsfunktionen für HTML-Ausgabe
-
-function showSuccessPage($title, $message, $bookingReference = null) {
-    ?>
-    <!DOCTYPE html>
-    <html lang="de">
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title><?= htmlspecialchars($title) ?></title>
-        <style>
-            body {
-                font-family: Arial, sans-serif;
-                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-                padding: 50px 20px;
-                margin: 0;
-            }
-            .box {
-                background-color: white;
-                max-width: 500px;
-                margin: 0 auto;
-                padding: 40px;
-                border-radius: 10px;
-                box-shadow: 0 10px 40px rgba(0,0,0,0.2);
-                text-align: center;
-            }
-            .icon { font-size: 80px; margin-bottom: 20px; }
-            h1 { color: #4CAF50; margin: 0 0 20px 0; }
-            p { color: #555; line-height: 1.6; }
-            .booking-ref {
-                background-color: #f0f0f0;
-                padding: 10px 20px;
-                border-radius: 5px;
-                display: inline-block;
-                margin-top: 20px;
-                font-family: monospace;
-                font-size: 14px;
-            }
-        </style>
-    </head>
-    <body>
-        <div class="box">
-            <div class="icon">✓</div>
-            <h1><?= htmlspecialchars($title) ?></h1>
-            <p><?= htmlspecialchars($message) ?></p>
-            <?php if ($bookingReference): ?>
-                <div class="booking-ref">
-                    <strong>Buchungsnummer:</strong><br>
-                    <?= htmlspecialchars($bookingReference) ?>
-                </div>
-            <?php endif; ?>
-        </div>
-    </body>
-    </html>
-    <?php
-}
-
-function showErrorPage($title, $message) {
-    ?>
-    <!DOCTYPE html>
-    <html lang="de">
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title><?= htmlspecialchars($title) ?></title>
-        <style>
-            body {
-                font-family: Arial, sans-serif;
-                background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-                padding: 50px 20px;
-                margin: 0;
-            }
-            .box {
-                background-color: white;
-                max-width: 500px;
-                margin: 0 auto;
-                padding: 40px;
-                border-radius: 10px;
-                box-shadow: 0 10px 40px rgba(0,0,0,0.2);
-                text-align: center;
-            }
-            .icon { font-size: 80px; margin-bottom: 20px; }
-            h1 { color: #f44336; margin: 0 0 20px 0; }
-            p { color: #555; line-height: 1.6; }
-        </style>
-    </head>
-    <body>
-        <div class="box">
-            <div class="icon">⚠️</div>
-            <h1><?= htmlspecialchars($title) ?></h1>
-            <p><?= htmlspecialchars($message) ?></p>
-        </div>
-    </body>
-    </html>
-    <?php
+    $error_title = 'Fehler';
+    $error_message = 'Ein Fehler ist aufgetreten.';
+    $error_details = 'Bitte kontaktieren Sie den Support.';
+    $retry_url = '';
+    require __DIR__ . '/../../templates/error_page.php';
 }

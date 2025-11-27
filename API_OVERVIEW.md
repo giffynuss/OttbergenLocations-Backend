@@ -299,9 +299,17 @@ Buchung stornieren (eigene oder als Provider). Sendet automatisch Stornierungsbe
 ### GET/POST /bookings/cancel-token.php?token={token}
 Buchung per Token stornieren (ohne Authentifizierung). Wird von E-Mail-Links verwendet.
 
+**Query-Parameter:**
+- `token` (erforderlich): Der Stornierungstoken aus der E-Mail
+- `format=json` (optional): Wenn angegeben, wird eine JSON-Response zurückgegeben, sonst eine HTML-Bestätigungsseite
+
 **Request (POST, optional):** `{ "reason": "Grund der Stornierung" }`
 
-**Response:**
+**Verhalten:**
+- **Standard (ohne `format=json`)**: Zeigt eine benutzerfreundliche HTML-Bestätigungsseite an
+- **Mit `format=json`**: Gibt eine JSON-Response zurück (für API-Aufrufe)
+
+**Response (nur bei format=json):**
 ```json
 {
   "success": true,

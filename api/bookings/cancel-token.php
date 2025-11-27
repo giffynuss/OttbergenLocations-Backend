@@ -1,7 +1,13 @@
 <?php
 // GET /api/bookings/cancel-token.php?token={token} - Buchung per Token stornieren (für Gäste)
 
-header("Content-Type: application/json; charset=utf-8");
+// Prüfen ob JSON-Response gewünscht ist (für API-Calls)
+$acceptJson = isset($_GET['format']) && $_GET['format'] === 'json';
+
+if ($acceptJson) {
+    header("Content-Type: application/json; charset=utf-8");
+}
+
 header("Access-Control-Allow-Origin: http://localhost:5173");
 header("Access-Control-Allow-Credentials: true");
 header("Access-Control-Allow-Methods: GET, POST, OPTIONS");
@@ -15,6 +21,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 
 require_once __DIR__ . '/../../config/database.php';
 require_once __DIR__ . '/../../services/EmailService.php';
+
+// Frontend-URL aus Umgebungsvariablen oder Standard
+$frontend_url = getenv('FRONTEND_URL') ?: 'http://localhost:5173';
 
 if ($_SERVER['REQUEST_METHOD'] !== 'GET' && $_SERVER['REQUEST_METHOD'] !== 'POST') {
     http_response_code(405);
@@ -37,13 +46,21 @@ try {
 
     if (!$token) {
         http_response_code(400);
-        echo json_encode([
-            'success' => false,
-            'error' => [
-                'code' => 'MISSING_TOKEN',
-                'message' => 'Token fehlt.'
-            ]
-        ]);
+        if ($acceptJson) {
+            echo json_encode([
+                'success' => false,
+                'error' => [
+                    'code' => 'MISSING_TOKEN',
+                    'message' => 'Token fehlt.'
+                ]
+            ]);
+        } else {
+            $error_title = 'Token fehlt';
+            $error_message = 'Der Stornierungslink ist ungültig oder unvollständig.';
+            $error_details = '';
+            $retry_url = '';
+            require __DIR__ . '/../../templates/error_page.php';
+        }
         exit;
     }
 
@@ -64,13 +81,21 @@ try {
 
     if (!$booking) {
         http_response_code(404);
-        echo json_encode([
-            'success' => false,
-            'error' => [
-                'code' => 'INVALID_TOKEN',
-                'message' => 'Ungültiger oder abgelaufener Token.'
-            ]
-        ]);
+        if ($acceptJson) {
+            echo json_encode([
+                'success' => false,
+                'error' => [
+                    'code' => 'INVALID_TOKEN',
+                    'message' => 'Ungültiger oder abgelaufener Token.'
+                ]
+            ]);
+        } else {
+            $error_title = 'Ungültiger Link';
+            $error_message = 'Der Stornierungslink ist ungültig oder bereits verwendet worden.';
+            $error_details = 'Bitte überprüfen Sie, ob die Buchung bereits storniert wurde.';
+            $retry_url = '';
+            require __DIR__ . '/../../templates/error_page.php';
+        }
         exit;
     }
 
@@ -78,13 +103,21 @@ try {
     $allowedStatuses = ['pending', 'confirmed', 'upcoming'];
     if (!in_array($booking['status'], $allowedStatuses)) {
         http_response_code(400);
-        echo json_encode([
-            'success' => false,
-            'error' => [
-                'code' => 'INVALID_STATUS',
-                'message' => "Diese Buchung kann nicht mehr storniert werden (Status: {$booking['status']})."
-            ]
-        ]);
+        if ($acceptJson) {
+            echo json_encode([
+                'success' => false,
+                'error' => [
+                    'code' => 'INVALID_STATUS',
+                    'message' => "Diese Buchung kann nicht mehr storniert werden (Status: {$booking['status']})."
+                ]
+            ]);
+        } else {
+            $error_title = 'Stornierung nicht möglich';
+            $error_message = 'Diese Buchung kann nicht mehr storniert werden.';
+            $error_details = "Status der Buchung: " . htmlspecialchars($booking['status']);
+            $retry_url = '';
+            require __DIR__ . '/../../templates/error_page.php';
+        }
         exit;
     }
 
@@ -155,10 +188,18 @@ try {
             'location' => $booking['place_location']
         ];
 
+        // Gast-Daten für EmailService formatieren (camelCase)
+        $guestDataForEmail = [
+            'email' => $guestInfo['email'],
+            'firstName' => $guestInfo['first_name'],
+            'lastName' => $guestInfo['last_name'],
+            'gender' => $guestInfo['gender']
+        ];
+
         $emailService->sendBookingCancellationToUser(
             $booking,
             $placeData,
-            $guestInfo,
+            $guestDataForEmail,
             $cancellationReason,
             '' // Rückerstattungsinfo kann hier hinzugefügt werden
         );
@@ -170,35 +211,78 @@ try {
         // $emailService->sendCancellationNotificationToProvider($booking, $placeData, $provider, $guestInfo);
     }
 
-    // Aktualisierte Buchung zurückgeben
-    $resultStmt = $conn->prepare("
-        SELECT
-            booking_id as id,
-            status,
-            cancelled_at as cancelledAt,
-            cancellation_reason as cancellationReason
-        FROM bookings
-        WHERE booking_id = :booking_id
-    ");
-    $resultStmt->execute(['booking_id' => $booking['booking_id']]);
-    $result = $resultStmt->fetch(PDO::FETCH_ASSOC);
+    // Wenn JSON gewünscht ist, JSON-Response zurückgeben
+    if ($acceptJson) {
+        $resultStmt = $conn->prepare("
+            SELECT
+                booking_id as id,
+                status,
+                cancelled_at as cancelledAt,
+                cancellation_reason as cancellationReason
+            FROM bookings
+            WHERE booking_id = :booking_id
+        ");
+        $resultStmt->execute(['booking_id' => $booking['booking_id']]);
+        $result = $resultStmt->fetch(PDO::FETCH_ASSOC);
 
-    $result['id'] = (int)$result['id'];
+        $result['id'] = (int)$result['id'];
 
-    echo json_encode([
-        'success' => true,
-        'data' => $result,
-        'message' => 'Buchung erfolgreich storniert. Sie erhalten eine Bestätigungs-E-Mail.'
-    ], JSON_UNESCAPED_UNICODE);
+        echo json_encode([
+            'success' => true,
+            'data' => $result,
+            'message' => 'Buchung erfolgreich storniert. Sie erhalten eine Bestätigungs-E-Mail.'
+        ], JSON_UNESCAPED_UNICODE);
+    } else {
+        // HTML-Bestätigungsseite anzeigen
+        $resultStmt = $conn->prepare("
+            SELECT
+                booking_id,
+                booking_reference,
+                status,
+                cancelled_at,
+                cancellation_reason,
+                check_in,
+                check_out,
+                guests,
+                total_price
+            FROM bookings
+            WHERE booking_id = :booking_id
+        ");
+        $resultStmt->execute(['booking_id' => $booking['booking_id']]);
+        $result = $resultStmt->fetch(PDO::FETCH_ASSOC);
+
+        // Variablen für das Template vorbereiten
+        $booking_reference = $result['booking_reference'];
+        $place_name = $booking['place_name'];
+        $place_location = $booking['place_location'];
+        $check_in = date('d.m.Y', strtotime($result['check_in']));
+        $check_out = date('d.m.Y', strtotime($result['check_out']));
+        $guests = $result['guests'];
+        $total_price = number_format($result['total_price'], 2, ',', '.');
+        $cancelled_at = date('d.m.Y H:i', strtotime($result['cancelled_at']));
+        $guest_email = $guestInfo['email'] ?? '';
+        $refund_info = ''; // Kann später hinzugefügt werden
+
+        // Template laden und anzeigen
+        require __DIR__ . '/../../templates/cancellation_success.php';
+    }
 
 } catch (Exception $e) {
     error_log("Stornierungsfehler: " . $e->getMessage());
     http_response_code(500);
-    echo json_encode([
-        'success' => false,
-        'error' => [
-            'code' => 'SERVER_ERROR',
-            'message' => 'Serverfehler bei der Stornierung: ' . $e->getMessage()
-        ]
-    ], JSON_UNESCAPED_UNICODE);
+    if ($acceptJson) {
+        echo json_encode([
+            'success' => false,
+            'error' => [
+                'code' => 'SERVER_ERROR',
+                'message' => 'Serverfehler bei der Stornierung: ' . $e->getMessage()
+            ]
+        ], JSON_UNESCAPED_UNICODE);
+    } else {
+        $error_title = 'Serverfehler';
+        $error_message = 'Es ist ein unerwarteter Fehler aufgetreten.';
+        $error_details = 'Bitte versuchen Sie es später erneut oder kontaktieren Sie uns.';
+        $retry_url = $_SERVER['REQUEST_URI'] ?? '';
+        require __DIR__ . '/../../templates/error_page.php';
+    }
 }
