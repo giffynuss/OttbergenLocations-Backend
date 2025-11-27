@@ -2,9 +2,16 @@
 // GET /api/bookings - Liste aller Buchungen des eingeloggten Users
 
 header("Content-Type: application/json; charset=utf-8");
-header("Access-Control-Allow-Origin: *");
-header("Access-Control-Allow-Methods: GET");
+header("Access-Control-Allow-Origin: http://localhost:5173");
+header("Access-Control-Allow-Credentials: true");
+header("Access-Control-Allow-Methods: GET, OPTIONS");
 header("Access-Control-Allow-Headers: Content-Type, Authorization");
+
+// Handle preflight requests
+if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+    http_response_code(200);
+    exit;
+}
 
 require_once __DIR__ . '/../../config/database.php';
 require_once __DIR__ . '/../../helpers/auth.php';
@@ -41,11 +48,16 @@ try {
             b.place_id as placeId,
             p.name as placeName,
             p.location as placeLocation,
+            b.user_id as userId,
             b.check_in as checkIn,
             b.check_out as checkOut,
             b.guests,
             b.total_price as totalPrice,
-            b.status
+            b.payment_method as paymentMethod,
+            b.booking_reference as bookingReference,
+            b.status,
+            b.cancelled_at as cancelledAt,
+            b.cancellation_reason as cancellationReason
         FROM bookings b
         JOIN places p ON b.place_id = p.place_id
         WHERE b.user_id = :user_id
@@ -75,6 +87,7 @@ try {
     foreach ($bookings as &$booking) {
         $booking['id'] = (int)$booking['id'];
         $booking['placeId'] = (int)$booking['placeId'];
+        $booking['userId'] = (int)$booking['userId'];
         $booking['guests'] = (int)$booking['guests'];
         $booking['totalPrice'] = (float)$booking['totalPrice'];
     }
@@ -100,7 +113,7 @@ try {
 
     echo json_encode([
         'success' => true,
-        'data' => $bookings,
+        'bookings' => $bookings,
         'pagination' => [
             'page' => $page,
             'limit' => $limit,

@@ -205,11 +205,77 @@ Neue Buchung erstellen. **KEINE Auth erforderlich** (Gast-Buchungen möglich).
 Eigene Buchungen abrufen (mit Filter & Pagination).
 
 **Query-Parameter:**
-- `status` - Filter: pending, confirmed, upcoming, completed, cancelled
-- `page`, `limit` - Pagination
+- `status` - Filter: pending, confirmed, upcoming, completed, cancelled, rejected
+- `page` - Seitenzahl (Standard: 1)
+- `limit` - Anzahl pro Seite (Standard: 20, Max: 100)
+
+**Response:**
+```json
+{
+  "success": true,
+  "bookings": [
+    {
+      "id": 123,
+      "placeId": 1,
+      "placeName": "Kulturraum Ottbergen",
+      "placeLocation": "Ottbergen",
+      "userId": 5,
+      "checkIn": "2025-12-15",
+      "checkOut": "2025-12-20",
+      "guests": 50,
+      "totalPrice": 1250.00,
+      "paymentMethod": "transfer",
+      "bookingReference": "BK20251124-1234",
+      "status": "pending",
+      "cancelledAt": null,
+      "cancellationReason": null
+    }
+  ],
+  "pagination": {
+    "page": 1,
+    "limit": 20,
+    "total": 5,
+    "pages": 1
+  }
+}
+```
+
+### GET /bookings/get.php?id={id} 🔒
+Einzelne Buchung anhand der ID abrufen. User kann eigene Buchungen sehen, Provider können Buchungen für ihre Orte sehen.
+
+**Query-Parameter:**
+- `id` - Buchungs-ID (Pflicht)
+
+**Response (Success):**
+```json
+{
+  "success": true,
+  "booking": {
+    "id": 123,
+    "placeId": 1,
+    "placeName": "Kulturraum Ottbergen",
+    "placeLocation": "Ottbergen",
+    "userId": 5,
+    "checkIn": "2025-12-15",
+    "checkOut": "2025-12-20",
+    "guests": 50,
+    "totalPrice": 1250.00,
+    "paymentMethod": "transfer",
+    "bookingReference": "BK20251124-1234",
+    "status": "pending",
+    "cancelledAt": null,
+    "cancellationReason": null
+  }
+}
+```
+
+**Error Responses:**
+- `MISSING_ID` - Buchungs-ID fehlt
+- `BOOKING_NOT_FOUND` - Buchung nicht gefunden
+- `FORBIDDEN` - Keine Berechtigung für diese Buchung
 
 ### GET /bookings/detail.php?id={id} 🔒
-Buchungsdetails abrufen.
+Erweiterte Buchungsdetails mit Place-Informationen und Provider-Kontaktdaten abrufen.
 
 ### PATCH /bookings/cancel.php?id={id} 🔒
 Buchung stornieren (eigene oder als Provider). Sendet automatisch Stornierungsbestätigungs-E-Mail.
@@ -432,9 +498,12 @@ Gesamtpreis = pricePerDay × Anzahl Tage
 
 ---
 
-**Version:** 1.2
-**Letztes Update:** 2025-11-25
+**Version:** 1.3
+**Letztes Update:** 2025-11-27
 **Changelog:**
+- v1.3: `/bookings/get.php` Endpoint hinzugefügt für Frontend-Kompatibilität
+- v1.3: CORS-Header in allen Booking-Endpoints für Session-Support aktualisiert
+- v1.3: Response-Format von `/bookings/index.php` angepasst (`bookings` statt `data`)
 - v1.2: E-Mail-Benachrichtigungen implementiert (Gmail/Outlook SMTP)
 - v1.2: Status 'rejected' für Buchungen hinzugefügt
 - v1.2: Token-basierte Buchungsbestätigung/-ablehnung per E-Mail
