@@ -252,7 +252,7 @@
             <p>Es tut uns leid, dass es dieses Mal nicht geklappt hat. Wir hoffen, dass Sie bald eine passende Alternative finden!</p>
 
             <p style="text-align: center; margin-top: 30px;">
-                <a href="<?= $frontend_url ?>/places" class="button">Weitere Locations ansehen</a>
+                <a href="<?= $frontend_url ?>/search" class="button">Weitere Locations ansehen</a>
             </p>
 
             <div class="divider"></div>

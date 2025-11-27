@@ -357,7 +357,7 @@
 
             <!-- Call-to-Action Button -->
             <div class="button-container">
-                <a href="<?= $frontend_url ?>/places" class="button">Weitere Locations entdecken</a>
+                <a href="<?= $frontend_url ?>/search" class="button">Weitere Locations entdecken</a>
             </div>
         </div>
 

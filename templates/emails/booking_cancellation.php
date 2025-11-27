@@ -267,7 +267,7 @@
             <p>Wir hoffen, Sie bald wieder bei OttbergenLocations begrüßen zu dürfen!</p>
 
             <p style="text-align: center; margin-top: 30px;">
-                <a href="<?= $frontend_url ?>/places" class="button">Weitere Locations entdecken</a>
+                <a href="<?= $frontend_url ?>/search" class="button">Weitere Locations entdecken</a>
             </p>
 
             <div class="divider"></div>

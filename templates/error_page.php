@@ -220,7 +220,7 @@
                 <?php if (!empty($retry_url)): ?>
                 <a href="<?= htmlspecialchars($retry_url) ?>" class="button">Erneut versuchen</a>
                 <?php endif; ?>
-                <a href="<?= $frontend_url ?>/places" class="button button-secondary">Zur Startseite</a>
+                <a href="<?= $frontend_url ?>/search" class="button button-secondary">Zur Startseite</a>
             </div>
         </div>
 
