@@ -7,8 +7,31 @@ header("Access-Control-Allow-Credentials: true");
 
 session_start();
 require_once __DIR__ . "/../../config/database.php";
+require_once __DIR__ . "/../../helpers/validation.php";
 
 $input = json_decode(file_get_contents("php://input"), true);
+
+// JSON-Validierung
+if (!$input || json_last_error() !== JSON_ERROR_NONE) {
+    http_response_code(400);
+    echo json_encode(['success' => false, 'message' => 'Ungültige JSON-Daten']);
+    exit;
+}
+
+// E-Mail-Format validieren
+$emailValidation = validateEmail($input['email'] ?? '');
+if (!$emailValidation['valid']) {
+    http_response_code(400);
+    echo json_encode(['success' => false, 'message' => $emailValidation['error']]);
+    exit;
+}
+
+// Passwort vorhanden prüfen (KEINE Längen-Validierung beim Login!)
+if (empty($input['password'])) {
+    http_response_code(400);
+    echo json_encode(['success' => false, 'message' => 'Passwort ist erforderlich']);
+    exit;
+}
 
 $db = new Database();
 $conn = $db->getConnection();

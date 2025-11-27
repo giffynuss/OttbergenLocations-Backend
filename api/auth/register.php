@@ -24,6 +24,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 }
 
 require_once __DIR__ . '/../../config/database.php';
+require_once __DIR__ . '/../../helpers/validation.php';
 
 // Datenbankverbindung prüfen
 try {
@@ -51,36 +52,16 @@ if (!$input || json_last_error() !== JSON_ERROR_NONE) {
     exit;
 }
 
-// Pflichtfelder prüfen
-$required_fields = ['firstName', 'lastName', 'email', 'password', 'phone', 'street', 'houseNumber', 'zipCode', 'city'];
-$missing_fields = [];
+// Validierung mit zentraler Validierungslogik
+$validation = validateRegistrationData($input);
 
-foreach ($required_fields as $field) {
-    if (!isset($input[$field]) || trim($input[$field]) === '') {
-        $missing_fields[] = $field;
-    }
-}
-
-if (!empty($missing_fields)) {
+if (!$validation['valid']) {
     http_response_code(400);
     echo json_encode([
         'success' => false,
-        'message' => 'Fehlende oder leere Felder: ' . implode(', ', $missing_fields)
+        'message' => 'Validierung fehlgeschlagen',
+        'errors' => $validation['errors']
     ]);
-    exit;
-}
-
-// E-Mail-Format validieren
-if (!filter_var($input['email'], FILTER_VALIDATE_EMAIL)) {
-    http_response_code(400);
-    echo json_encode(['success' => false, 'message' => 'Ungültige E-Mail-Adresse']);
-    exit;
-}
-
-// Passwort-Länge prüfen
-if (strlen($input['password']) < 6) {
-    http_response_code(400);
-    echo json_encode(['success' => false, 'message' => 'Passwort muss mindestens 6 Zeichen lang sein']);
     exit;
 }
 

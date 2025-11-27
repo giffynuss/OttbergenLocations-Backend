@@ -52,56 +52,71 @@ function getMockBankDetails() {
  * @return array ['valid' => bool, 'error' => array|null]
  */
 function validateUserInfo($userInfo, $paymentMethod) {
-    // Pflichtfelder immer erforderlich
-    $requiredFields = ['gender', 'firstName', 'lastName', 'email', 'phone'];
+    require_once __DIR__ . '/validation.php';
 
-    foreach ($requiredFields as $field) {
-        if (empty($userInfo[$field])) {
-            return [
-                'valid' => false,
-                'error' => [
-                    'code' => 'MISSING_USER_INFO',
-                    'message' => "Pflichtfeld fehlt: {$field}"
-                ]
-            ];
-        }
+    $errors = [];
+
+    // Gender validieren
+    $genderValidation = validateGender($userInfo['gender'] ?? '');
+    if (!$genderValidation['valid']) {
+        $errors['gender'] = $genderValidation['error'];
+    }
+
+    // Vorname validieren
+    $firstNameValidation = validateName($userInfo['firstName'] ?? '', 'Vorname');
+    if (!$firstNameValidation['valid']) {
+        $errors['firstName'] = $firstNameValidation['error'];
+    }
+
+    // Nachname validieren
+    $lastNameValidation = validateName($userInfo['lastName'] ?? '', 'Nachname');
+    if (!$lastNameValidation['valid']) {
+        $errors['lastName'] = $lastNameValidation['error'];
+    }
+
+    // E-Mail validieren
+    $emailValidation = validateEmail($userInfo['email'] ?? '');
+    if (!$emailValidation['valid']) {
+        $errors['email'] = $emailValidation['error'];
+    }
+
+    // Telefon validieren
+    $phoneValidation = validatePhone($userInfo['phone'] ?? '');
+    if (!$phoneValidation['valid']) {
+        $errors['phone'] = $phoneValidation['error'];
     }
 
     // Bei Überweisung sind Adressdaten erforderlich
     if ($paymentMethod === 'transfer') {
-        $addressFields = ['street', 'postalCode', 'city'];
-        foreach ($addressFields as $field) {
-            if (empty($userInfo[$field])) {
-                return [
-                    'valid' => false,
-                    'error' => [
-                        'code' => 'MISSING_ADDRESS_INFO',
-                        'message' => "Bei Überweisung erforderlich: {$field}"
-                    ]
-                ];
-            }
+        // Straße
+        if (empty($userInfo['street'])) {
+            $errors['street'] = 'Dieses Feld ist erforderlich';
+        }
+
+        // Hausnummer (optional prüfen ob vorhanden)
+        if (isset($userInfo['houseNumber']) && empty($userInfo['houseNumber'])) {
+            $errors['houseNumber'] = 'Hausnummer ist erforderlich';
+        }
+
+        // PLZ validieren
+        $zipCodeValidation = validateZipCode($userInfo['postalCode'] ?? '');
+        if (!$zipCodeValidation['valid']) {
+            $errors['postalCode'] = $zipCodeValidation['error'];
+        }
+
+        // Stadt
+        if (empty($userInfo['city'])) {
+            $errors['city'] = 'Dieses Feld ist erforderlich';
         }
     }
 
-    // E-Mail-Format validieren
-    if (!filter_var($userInfo['email'], FILTER_VALIDATE_EMAIL)) {
+    if (!empty($errors)) {
         return [
             'valid' => false,
             'error' => [
-                'code' => 'INVALID_EMAIL',
-                'message' => 'Ungültiges E-Mail-Format.'
-            ]
-        ];
-    }
-
-    // Gender validieren (nur 'herr' oder 'frau')
-    $validGenders = ['herr', 'frau'];
-    if (!in_array(strtolower($userInfo['gender']), $validGenders)) {
-        return [
-            'valid' => false,
-            'error' => [
-                'code' => 'INVALID_GENDER',
-                'message' => 'Gender muss "herr" oder "frau" sein.'
+                'code' => 'VALIDATION_FAILED',
+                'message' => 'Validierung fehlgeschlagen',
+                'details' => $errors
             ]
         ];
     }
