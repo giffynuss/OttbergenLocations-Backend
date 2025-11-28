@@ -54,6 +54,8 @@ Liste aller aktiven Orte (Frontend-optimiert).
 - `minCapacity` - Minimale Kapazität
 - `maxPrice` - Maximaler Preis pro Tag
 - `checkIn`, `checkOut` - Nur verfügbare Orte (YYYY-MM-DD)
+  - Filtert Orte mit überlappenden Buchungen aus (Status: pending, confirmed, upcoming)
+  - Beide Parameter müssen angegeben werden, sonst wird kein Datumsfilter angewendet
 
 **Response:**
 ```json
@@ -506,9 +508,13 @@ Gesamtpreis = pricePerDay × Anzahl Tage
 
 ---
 
-**Version:** 1.4
-**Letztes Update:** 2025-11-27
+**Version:** 1.5
+**Letztes Update:** 2025-11-28
 **Changelog:**
+- v1.5: **Verfügbarkeitsfilter für `/places/list.php` optimiert** ✅
+  - `checkIn` & `checkOut` Parameter nun korrekt implementiert
+  - SQL-Filter direkt in Query integriert (Performance-Optimierung)
+  - Filtert Orte mit überlappenden Buchungen aus
 - v1.4: **SQL Injection Security Audit** durchgeführt - Alle Endpoints sicher ✅
 - v1.4: Security Report erstellt ([SECURITY_AUDIT_REPORT.md](SECURITY_AUDIT_REPORT.md))
 - v1.4: Dokumentation aktualisiert (Schema, Seed, Installation, README)

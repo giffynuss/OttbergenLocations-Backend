@@ -174,6 +174,11 @@ Detaillierte Hilfe: [INSTALLATION.md](INSTALLATION.md)
 
 ## 📝 Version
 
+**v1.5** (2025-11-28)
+- **Verfügbarkeitsfilter für Places optimiert** ✅
+- `checkIn` & `checkOut` Parameter in `/places/list.php` korrekt implementiert
+- Performance-Optimierung durch SQL-basierte Filterung
+
 **v1.4** (2025-11-27)
 - **SQL Injection Security Audit** durchgeführt (42 Tests, 0 Vulnerabilities) ✅
 - Security Report: [SECURITY_AUDIT_REPORT.md](SECURITY_AUDIT_REPORT.md)

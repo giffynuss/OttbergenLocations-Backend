@@ -34,6 +34,21 @@ try {
     $minCapacity = isset($_GET['minCapacity']) ? intval($_GET['minCapacity']) : null;
     $maxPrice = isset($_GET['maxPrice']) ? floatval($_GET['maxPrice']) : null;
 
+    // Validierung der Datumsparameter (wenn beide angegeben)
+    if ($checkIn && $checkOut) {
+        $validation = validateDateRange($checkIn, $checkOut);
+        if (!$validation['valid']) {
+            http_response_code(400);
+            echo json_encode([
+                'success' => false,
+                'error' => [
+                    'message' => $validation['error']['message']
+                ]
+            ]);
+            exit;
+        }
+    }
+
     // Base Query
     $sql = "
         SELECT
@@ -56,6 +71,19 @@ try {
     ";
 
     $params = [];
+
+    // Filter: Verfügbarkeit (wenn checkIn und checkOut angegeben)
+    if ($checkIn && $checkOut) {
+        $sql .= " AND p.place_id NOT IN (
+            SELECT b.place_id
+            FROM bookings b
+            WHERE b.status IN ('pending', 'confirmed', 'upcoming')
+            AND b.check_in < :availability_check_out
+            AND b.check_out > :availability_check_in
+        )";
+        $params['availability_check_in'] = $checkIn;
+        $params['availability_check_out'] = $checkOut;
+    }
 
     // Filter: Suche (Name, Beschreibung, Location)
     if ($search) {
@@ -132,31 +160,6 @@ try {
         $place['latitude'] = $place['latitude'] ? (float)$place['latitude'] : null;
         $place['longitude'] = $place['longitude'] ? (float)$place['longitude'] : null;
         $place['active'] = (bool)$place['active'];
-    }
-
-    // Filter: Verfügbarkeit (wenn checkIn und checkOut angegeben)
-    if ($checkIn && $checkOut) {
-        $validation = validateDateRange($checkIn, $checkOut);
-        if (!$validation['valid']) {
-            http_response_code(400);
-            echo json_encode([
-                'success' => false,
-                'error' => [
-                    'message' => $validation['error']['message']
-                ]
-            ]);
-            exit;
-        }
-
-        // Nur verfügbare Orte zurückgeben
-        $availablePlaces = [];
-        foreach ($places as $place) {
-            $availability = checkAvailability($conn, $place['id'], $checkIn, $checkOut);
-            if ($availability['available']) {
-                $availablePlaces[] = $place;
-            }
-        }
-        $places = $availablePlaces;
     }
 
     // Frontend-Format: "places" statt "data"
